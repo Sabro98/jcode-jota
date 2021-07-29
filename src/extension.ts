@@ -96,13 +96,25 @@ async function saveAsFile(
   if (!workSpaceFolders) return;
 
   const folderUri = workSpaceFolders[0].uri;
-  const basePath = path.join(folderUri.path, saveFolderName);
+  const parentPath = path.join(folderUri.path, saveFolderName);
 
   //폴더가 없다면 생성
+  !fs.existsSync(parentPath) && fs.mkdirSync(parentPath);
+
+  const currDate = new Date();
+  const _year = currDate.getFullYear().toString(),
+    _month = (currDate.getMonth() + 1).toString(),
+    _date = currDate.getDate().toString();
+
+  const year = _year.slice(2),
+    month = _month.length == 1 ? '0' + _month : _month,
+    date = _date.length == 1 ? '0' + _date : _date;
+
+  const basePath = path.join(parentPath, `${year}${month}${date}`);
+
   !fs.existsSync(basePath) && fs.mkdirSync(basePath);
 
   //파일의 최종 경로
-  const currDate = new Date();
   const fileName = `Submission@${currDate.getHours()}:${currDate.getMinutes()}:${currDate.getSeconds()}.txt`;
   const fileUri = folderUri.with({
     path: path.join(basePath, fileName),
