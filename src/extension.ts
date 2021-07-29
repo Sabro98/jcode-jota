@@ -1,8 +1,8 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
-import { ExtensionContext, workspace, window } from 'vscode';
-import fetch, { Response } from 'node-fetch';
+import { ExtensionContext, workspace, window, WorkspaceFolder } from 'vscode';
+import fetch from 'node-fetch';
 
 async function getProblemCode(): Promise<String | undefined> {
   const problemCode = await window.showInputBox({
@@ -33,7 +33,7 @@ async function submitCode(
     judge_id: 'jota-judge',
     language: 'C',
     // jcode의 사용자 id를 사용해야하나? Jcode <-> Jota 계정 과의 연관성 확인 필요
-    user: 'admin',
+    user: userId,
     problem: problemCode,
     source: sourceCode,
   };
@@ -54,9 +54,9 @@ async function submitCode(
       const results: string[] = showResult(post);
 
       //save result to ./result
-      saveAsFile(results);
+      saveAsFile(userId, problemCode, sourceCode, results);
     })
-    .catch((error) => vscode.window.showErrorMessage(`Error: ${error}`));
+    .catch((error) => window.showErrorMessage(`Error: ${error}`));
 }
 
 function showResult(post: string): string[] {
@@ -66,9 +66,9 @@ function showResult(post: string): string[] {
   //process result for show
   JSON.parse(post).forEach((element: string[], index: number) => {
     const result = element[0] == 'AC' ? '✅' : '❌';
-    const spendTime = element[1];
-    const spendMemory = element[2];
-    const resultMsg = `testCase #${index} → ${result} time: ${spendTime}s | memory: ${spendMemory} KB`;
+    const spendTime = parseFloat(element[1]).toFixed(4);
+    const spendMemory = parseFloat(element[2]).toFixed(2);
+    const resultMsg = `Test case #${index}: ${element[0]} [${spendTime}s, ${spendMemory} KB]`;
 
     submitResultArrs.push(resultMsg);
     resultEmoj.push(` case #${index + 1} : ${result} `);
@@ -81,11 +81,16 @@ function showResult(post: string): string[] {
 }
 
 //save as text file
-async function saveAsFile(results: string[]): Promise<void> {
+async function saveAsFile(
+  userId: String,
+  problemId: String,
+  sourceCode: String,
+  results: String[]
+): Promise<void> {
   const path = require('path');
   const fs = require('fs');
   const saveFolderName = 'result';
-  const workSpaceFolders: readonly vscode.WorkspaceFolder[] | undefined =
+  const workSpaceFolders: readonly WorkspaceFolder[] | undefined =
     workspace.workspaceFolders;
 
   if (!workSpaceFolders) return;
@@ -96,11 +101,23 @@ async function saveAsFile(results: string[]): Promise<void> {
   //폴더가 없다면 생성
   !fs.existsSync(basePath) && fs.mkdirSync(basePath);
 
+  //파일의 최종 경로
+  const currDate = new Date();
+  const fileName = `Submission@${currDate.getHours()}:${currDate.getMinutes()}:${currDate.getSeconds()}.txt`;
   const fileUri = folderUri.with({
-    path: path.join(basePath, `${Date.now().toString()}.txt`),
+    path: path.join(basePath, fileName),
   });
 
-  const data = results.join('\n');
+  //기록할 채점 결과 문자열 생성
+  let data = `Submission of ${problemId} by ${userId}\n\n`;
+  data += '-------- Execution Results--------\n';
+  results.forEach((result) => (data += result.includes('AC') ? '✅ ' : '❌ '));
+  data += '\n';
+  data += results.join('\n');
+
+  //소스코드 첨부
+  data += '\n\n---------------- SOURCE CODE ---------------- \n';
+  data += sourceCode;
 
   await workspace.fs.writeFile(fileUri, Buffer.from(data, 'utf8'));
 }
