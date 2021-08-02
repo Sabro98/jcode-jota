@@ -1,0 +1,9 @@
+body {
+  background-color: transparent;
+}
+
+.submit-code {
+  display: block;
+  border: none;
+  margin: 0 auto;
+}

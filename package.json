@@ -15,10 +15,24 @@
     "Other"
   ],
   "activationEvents": [
-    "onCommand:jcode-jota.submitCode"
+    "onCommand:jcode-jota.submitCode",
+    "onView:jcode.submissionView"
   ],
   "main": "./out/extension.js",
+  "extensionKind": [
+    "ui",
+    "workspace"
+  ],
   "contributes": {
+    "views": {
+      "explorer": [
+        {
+          "type": "webview",
+          "id": "jcode.submissionView",
+          "name": "Submit Code"
+        }
+      ]
+    },
     "commands": [
       {
         "command": "jcode-jota.submitCode",
