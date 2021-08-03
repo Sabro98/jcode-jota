@@ -44,6 +44,7 @@ code {
   font-family: var(--vscode-editor-font-family);
 }
 
+form input[type='submit'],
 button {
   border: none;
   padding: var(--input-padding-vertical) var(--input-padding-horizontal);
@@ -55,11 +56,13 @@ button {
   background: var(--vscode-button-background);
 }
 
+form input[type='submit']:hover,
 button:hover {
   cursor: pointer;
   background: var(--vscode-button-hoverBackground);
 }
 
+form input[type='submit']:focus,
 button:focus {
   outline-color: var(--vscode-focusBorder);
 }

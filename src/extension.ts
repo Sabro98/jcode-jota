@@ -1,14 +1,9 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
-import { ExtensionContext, commands } from 'vscode';
+import { ExtensionContext } from 'vscode';
 
-import {
-  getProblemCode,
-  getTextFromEditor,
-  submitCode,
-  getUserId,
-} from './submit';
+import { getTextFromEditor, submitCode } from './submit';
 
 export function activate(context: ExtensionContext) {
   console.log('Congratulations, your extension "jcode-jota" is now active!');
@@ -61,20 +56,30 @@ class SubmissionViewProvider implements vscode.WebviewViewProvider {
 
     webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
 
-    // ?
-    webviewView.webview.onDidReceiveMessage((data) => {
-      console.log('HI');
+    webviewView.webview.onDidReceiveMessage(async (data) => {
       switch (data.type) {
-        case 'colorSelected': {
-          vscode.window.activeTextEditor?.insertSnippet(
-            new vscode.SnippetString(`#${data.value}`)
-          );
-          break;
-        }
-        default:
-          console.log('HI');
+        case 'submit':
+          const { id, problemCode } = data;
+          if (!problemCode) return;
+          if (!id) return;
+          const sourceCode = getTextFromEditor();
+          if (!sourceCode) return;
+
+          const results = await submitCode(id, problemCode, sourceCode);
+          if (results) this.updateResult(results);
       }
     });
+  }
+
+  private updateResult(results: string[]) {
+    if (this._view) {
+      this._view.webview.postMessage({
+        type: 'updateResult',
+        path: results[0],
+        emoji: results[1],
+        result: results.slice(2),
+      });
+    }
   }
 
   private _getHtmlForWebview(webview: vscode.Webview) {
@@ -114,16 +119,16 @@ class SubmissionViewProvider implements vscode.WebviewViewProvider {
 				<title>Submission Code</title>
 			</head>
 			<body>
-				<ul class="color-list">
-				</ul>
-        <form class="submit-code">
+        <form class="submit-form">
           <span>ID</span>
-          <input name="ID" type="text" placeholder="Write your ID"/>
-          
-          <span>ProblemCode</span>
-          <input name="ID" type="text" placeholder="Write problem code"/>
+          <input type="text" placeholder="Write ID" class="id-input required"/>
+          <span>Problem Code</span>
+          <input type="text" placeholder="Write Problem Code" class="problem-input required"/>
+          <input type="submit" value="Submit!"/>
         </form>
-        <button class="submit-code"> Submit! </button>
+        <div class="result-div">
+        
+        </div>
 				<script nonce="${nonce}" src="${scriptUri}"></script>
 			</body>
 			</html>`;

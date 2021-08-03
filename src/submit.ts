@@ -25,7 +25,7 @@ export async function submitCode(
   userId: String,
   problemCode: String,
   sourceCode: String
-) {
+): Promise<string[] | undefined> {
   const URL = 'http://203.254.143.156:8001/api/v2/submit/jcode';
   //   const URL = 'http://jota.jbnu.ac.kr/api/v2/submit/';
   const data = {
@@ -46,35 +46,48 @@ export async function submitCode(
   };
 
   //send rest to URL
-  fetch(URL, options)
-    .then((response) => response.json())
-    .then((post) => {
-      //show result to user
-      const results: string[] = showResult(post);
+  try {
+    const response = await fetch(URL, options);
+    const post: string = await response.json();
+    const parsedPost = JSON.parse(post);
 
-      //save result to ./result
-      saveAsFile(userId, problemCode, sourceCode, results);
-    })
-    .catch((error) => window.showErrorMessage(`Error: ${error}`));
+    const results = saveResult(parsedPost);
+    const resultsEmoj: string[] = [];
+
+    results.forEach((result) =>
+      resultsEmoj.push(result.includes('AC') ? '✅  ' : '❌  ')
+    );
+    //save result to ./result
+    const savedPath = await saveAsFile(
+      userId,
+      problemCode,
+      sourceCode,
+      results
+    );
+
+    //final Result -> {savedFilename, resultEmoji, results}
+    const finalResult: string[] = [];
+    finalResult.push(savedPath);
+    finalResult.push(resultsEmoj.join(' '));
+    results.forEach((result) => finalResult.push(result));
+
+    return finalResult;
+  } catch (error) {
+    window.showErrorMessage(`Error: ${error}`);
+  }
 }
 
-function showResult(post: string): string[] {
+function saveResult(post: []): string[] {
   const submitResultArrs: string[] = [];
-  const resultEmoj: string[] = [];
 
   //process result for show
-  JSON.parse(post).forEach((element: string[], index: number) => {
-    const result = element[0] == 'AC' ? '✅' : '❌';
+  post.forEach((element: string[], index: number) => {
     const spendTime = parseFloat(element[1]).toFixed(4);
     const spendMemory = parseFloat(element[2]).toFixed(2);
     const resultMsg = `Test case #${index}: ${element[0]} [${spendTime}s, ${spendMemory} KB]`;
 
     submitResultArrs.push(resultMsg);
-    resultEmoj.push(` case #${index + 1} : ${result} `);
   });
-
-  //show result use information message
-  window.showInformationMessage(resultEmoj.join(' '));
 
   return submitResultArrs;
 }
@@ -85,14 +98,14 @@ async function saveAsFile(
   problemId: String,
   sourceCode: String,
   results: String[]
-): Promise<void> {
+): Promise<string> {
   const path = require('path');
   const fs = require('fs');
   const saveFolderName = 'result';
   const workSpaceFolders: readonly WorkspaceFolder[] | undefined =
     workspace.workspaceFolders;
 
-  if (!workSpaceFolders) return;
+  if (!workSpaceFolders) return '';
 
   const folderUri = workSpaceFolders[0].uri;
   const parentPath = path.join(folderUri.path, saveFolderName);
@@ -131,6 +144,7 @@ async function saveAsFile(
   data += sourceCode;
 
   await workspace.fs.writeFile(fileUri, Buffer.from(data, 'utf8'));
+  return `Submission of ${problemId} by ${userId}`;
 }
 
 //get User's id
