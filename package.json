@@ -15,8 +15,7 @@
     "Other"
   ],
   "activationEvents": [
-    "onCommand:jcode-jota.submitCode",
-    "onView:jcode.submissionView"
+    "onCommand:jcode-jota.submitCode"
   ],
   "main": "./out/extension.js",
   "extensionKind": [
@@ -24,12 +23,23 @@
     "workspace"
   ],
   "contributes": {
-    "views": {
-      "explorer": [
+    "commands": [
+      {
+        "command": "jcode-jota.submitCode",
+        "title": "Submit Code!",
+        "category": "jcode",
+        "icon": {
+          "light": "media/icons/submit-button-white.svg",
+          "dark": "media/icons/submit-button-white.svg"
+        }
+      }
+    ],
+    "menus": {
+      "editor/title": [
         {
-          "type": "webview",
-          "id": "jcode.submissionView",
-          "name": "Submit Code"
+          "when": "resourceLangId == c",
+          "command": "jcode-jota.submitCode",
+          "group": "navigation"
         }
       ]
     }

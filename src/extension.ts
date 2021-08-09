@@ -1,36 +1,50 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
-import { ExtensionContext } from 'vscode';
+import { ExtensionContext, commands, window } from 'vscode';
 
-import { getTextFromEditor, submitCode } from './submit';
+import {
+  getTextFromEditor,
+  submitCode,
+  getProblemCode,
+  getUserId,
+} from './submit';
 
+//TODO: 이름, 문제 코드 자동완성, 아이콘 잘 보이도록 수정
 export function activate(context: ExtensionContext) {
   console.log('Congratulations, your extension "jcode-jota" is now active!');
 
-  // const command = 'jcode-jota.submitCode';
+  // 커맨드 코드
+  const command = 'jcode-jota.submitCode';
+  const disposable = commands.registerCommand(command, async () => {
+    const problemCode = await getProblemCode();
+    if (!problemCode) return;
+    const sourceCode = getTextFromEditor();
+    if (!sourceCode) return;
+    const userId = getUserId();
+    if (!userId) return;
 
-  // const disposable = commands.registerCommand(command, () => {
-  //   getProblemCode().then((problemCode) => {
-  //     if (!problemCode) return;
-  //     const sourceCode = getTextFromEditor();
-  //     if (!sourceCode) return;
-  //     const userId = getUserId();
-  //     if (!userId) return;
+    const submitResult = await submitCode(userId, problemCode, sourceCode);
+    if (!submitResult) return;
+    const emoji = submitResult[1].split(' ');
+    let displayResult = '';
+    emoji.forEach((emo, index) => {
+      displayResult += `#${index + 1}: ${emo} `;
+    });
+    window.showInformationMessage(displayResult);
+  });
 
-  //     submitCode(userId, problemCode, sourceCode);
-  //   });
-  // });
+  context.subscriptions.push(disposable);
 
-  const provider = new SubmissionViewProvider(context.extensionUri);
+  // //webview view 활성화 코드
+  // const provider = new SubmissionViewProvider(context.extensionUri);
 
-  context.subscriptions.push(
-    vscode.window.registerWebviewViewProvider(
-      SubmissionViewProvider.viewType,
-      provider
-    )
-  );
-  // context.subscriptions.push(disposable);
+  // context.subscriptions.push(
+  //   vscode.window.registerWebviewViewProvider(
+  //     SubmissionViewProvider.viewType,
+  //     provider
+  //   )
+  // );
 }
 
 class SubmissionViewProvider implements vscode.WebviewViewProvider {

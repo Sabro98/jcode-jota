@@ -1,3 +1,4 @@
+import { privateEncrypt } from 'crypto';
 import fetch from 'node-fetch';
 import { workspace, window, WorkspaceFolder } from 'vscode';
 
@@ -48,14 +49,16 @@ export async function submitCode(
   //send rest to URL
   try {
     const response = await fetch(URL, options);
+    console.log(response);
     const post: string = await response.json();
     const parsedPost = JSON.parse(post);
+    console.log(parsedPost);
 
     const results = saveResult(parsedPost);
     const resultsEmoj: string[] = [];
 
     results.forEach((result) =>
-      resultsEmoj.push(result.includes('AC') ? '✅  ' : '❌  ')
+      resultsEmoj.push(result.includes('AC') ? '✅' : '❌')
     );
     //save result to ./result
     const savedPath = await saveAsFile(
