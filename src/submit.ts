@@ -1,13 +1,40 @@
-import { privateEncrypt } from 'crypto';
+import 'dotenv/config';
 import fetch from 'node-fetch';
+import * as fs from 'fs';
+import * as path from 'path';
 import { workspace, window, WorkspaceFolder } from 'vscode';
 
-export async function getProblemCode(): Promise<String | undefined> {
+export async function getProblemCode(
+  currentSubmit: string
+): Promise<String | undefined> {
   const problemCode = await window.showInputBox({
     placeHolder: 'Write problem code',
+    value: currentSubmit,
   });
 
+  if (problemCode) updateUesrCurrentSubmit(problemCode);
   return problemCode;
+}
+
+export async function updateUesrCurrentSubmit(newSubmit: string) {
+  const userInfo = await getUserInfo();
+  if (!userInfo) return;
+  userInfo.currentSubmit = newSubmit;
+
+  const workSpaceFolders: readonly WorkspaceFolder[] | undefined =
+    workspace.workspaceFolders;
+  if (!workSpaceFolders) return undefined;
+
+  const folderUri = workSpaceFolders[0].uri;
+  const fileName = `submitMeta.json`;
+  const fileUri = folderUri.with({
+    path: path.join(folderUri.path, fileName),
+  });
+
+  await workspace.fs.writeFile(
+    fileUri,
+    Buffer.from(JSON.stringify(userInfo), 'utf8')
+  );
 }
 
 export function getTextFromEditor(): String | undefined {
@@ -21,14 +48,79 @@ export function getTextFromEditor(): String | undefined {
   }
 }
 
+export async function getUserInfo(): Promise<
+  | {
+      userID: string;
+      currentSubmit: string;
+    }
+  | undefined
+> {
+  const workSpaceFolders: readonly WorkspaceFolder[] | undefined =
+    workspace.workspaceFolders;
+  if (!workSpaceFolders) return undefined;
+
+  const folderUri = workSpaceFolders[0].uri;
+  const fileName = `submitMeta.json`;
+  const fileUri = folderUri.with({
+    path: path.join(folderUri.path, fileName),
+  });
+  const time = new Date();
+
+  //파일 존재 확인
+  try {
+    fs.utimesSync(fileUri.path, time, time);
+  } catch (err) {
+    fs.closeSync(fs.openSync(fileUri.path, 'w'));
+  }
+
+  const document = await workspace.openTextDocument(fileUri);
+  const text = document.getText();
+
+  //텍스트가 비어있다면 -> submit할 때 유저의 정보를 생성
+  if (text == '') {
+    window.showInformationMessage('유저 정보 초기화');
+    const userID = await window.showInputBox({
+      placeHolder: 'write your id',
+    });
+    if (!userID) return;
+
+    // userInfo -> {
+    //   id: id,
+    //   currentSubmit: submitProblemCode
+    // }
+    // 로 이루어져있음
+    const userInfo = {
+      userID,
+      currentSubmit: '',
+    };
+
+    //유저의 정보를 기록
+    await workspace.fs.writeFile(
+      fileUri,
+      Buffer.from(JSON.stringify(userInfo), 'utf8')
+    );
+    return userInfo;
+  }
+
+  // 내용이 있다면 JSON으로 변환
+  try {
+    const userInfo = JSON.parse(text);
+    return userInfo;
+  } catch (err) {
+    window.showErrorMessage(`${fileName} 형식 확인 필요.`);
+  }
+}
+
 // submit code to jota [params => (userId, problemCode, sourceCode)]
 export async function submitCode(
   userId: String,
   problemCode: String,
   sourceCode: String
 ): Promise<string[] | undefined> {
+  // const URL = process.env.SUBMIT_URL;
   const URL = 'http://203.254.143.156:8001/api/v2/submit/jcode';
   //   const URL = 'http://jota.jbnu.ac.kr/api/v2/submit/';
+  if (!URL) return;
   const data = {
     judge_id: 'jota-judge',
     language: 'C',
@@ -49,10 +141,10 @@ export async function submitCode(
   //send rest to URL
   try {
     const response = await fetch(URL, options);
-    console.log(response);
+    // console.log(response);
     const post: string = await response.json();
     const parsedPost = JSON.parse(post);
-    console.log(parsedPost);
+    // console.log(parsedPost);
 
     const results = saveResult(parsedPost);
     const resultsEmoj: string[] = [];
@@ -61,7 +153,7 @@ export async function submitCode(
       resultsEmoj.push(result.includes('AC') ? '✅' : '❌')
     );
     //save result to ./result
-    const savedPath = await saveAsFile(
+    const savedPath = await saveResultAsFile(
       userId,
       problemCode,
       sourceCode,
@@ -96,14 +188,12 @@ function saveResult(post: []): string[] {
 }
 
 //save as text file
-async function saveAsFile(
+async function saveResultAsFile(
   userId: String,
   problemId: String,
   sourceCode: String,
   results: String[]
 ): Promise<string> {
-  const path = require('path');
-  const fs = require('fs');
   const saveFolderName = 'result';
   const workSpaceFolders: readonly WorkspaceFolder[] | undefined =
     workspace.workspaceFolders;
@@ -148,9 +238,4 @@ async function saveAsFile(
 
   await workspace.fs.writeFile(fileUri, Buffer.from(data, 'utf8'));
   return `Submission of ${problemId} by ${userId}`;
-}
-
-//get User's id
-export function getUserId(): string {
-  return 'admin';
 }
