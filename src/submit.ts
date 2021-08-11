@@ -1,4 +1,3 @@
-import 'dotenv/config';
 import fetch from 'node-fetch';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -45,7 +44,7 @@ function getMetaFileUri(): Uri | undefined {
 }
 
 //최근 제출 정보를 업데이트
-export async function updateUesrCurrentSubmit(newSubmit: string) {
+async function updateUesrCurrentSubmit(newSubmit: string) {
   const userInfo = await getUserInfo();
   if (!userInfo) return;
   userInfo.currentSubmit = newSubmit;
@@ -150,10 +149,14 @@ export async function submitCode(
   //send rest to URL
   try {
     const response = await fetch(URL, options);
-    // console.log(response);
     const post: string = await response.json();
+
+    //status code로 에러를 확인
+    if (response.status === 405) {
+      window.showErrorMessage(post);
+      return;
+    }
     const parsedPost = JSON.parse(post);
-    // console.log(parsedPost);
 
     const results = saveResult(parsedPost);
     const resultsEmoj: string[] = [];
