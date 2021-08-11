@@ -10,7 +10,7 @@ import {
   getUserInfo,
 } from './submit';
 
-// TODO: 이름 방법 생각, 아이콘 잘 보이도록 수정
+// TODO: 아이콘 잘 보이도록 수정, 에러 체크
 
 export function activate(context: ExtensionContext) {
   // 커맨드 코드
@@ -19,11 +19,11 @@ export function activate(context: ExtensionContext) {
     const userInfo = await getUserInfo();
     if (!userInfo) return;
     const { userID, currentSubmit } = userInfo;
-
     const problemCode = await getProblemCode(currentSubmit);
     if (!problemCode) return;
     const sourceCode = getTextFromEditor();
     if (!sourceCode) return;
+
     const submitResult = await submitCode(userID, problemCode, sourceCode);
     if (!submitResult) return;
 
@@ -37,20 +37,20 @@ export function activate(context: ExtensionContext) {
 
   context.subscriptions.push(disposable);
 
-  // //webview view 활성화 코드
-  // 활성화를 위해 package.json의 내용 중
-  // activationEvents: "onView:jcode.submissionView" 추가
-  // contributes:
-  // "views": {
-  //   "explorer": [
-  //     {
-  //       "type": "webview",
-  //       "id": "jcode.submissionView",
-  //       "name": "Submit Code"
-  //     }
-  //   ]
-  // },
-  // 추가 필요
+  // // webview view 활성화 코드
+  // // 활성화를 위해 package.json의 내용 중
+  // // activationEvents: "onView:jcode.submissionView" 추가
+  // // contributes:
+  // // "views": {
+  // //   "explorer": [
+  // //     {
+  // //       "type": "webview",
+  // //       "id": "jcode.submissionView",
+  // //       "name": "Submit Code"
+  // //     }
+  // //   ]
+  // // },
+  // // 추가 필요
 
   // const provider = new SubmissionViewProvider(context.extensionUri);
   // context.subscriptions.push(

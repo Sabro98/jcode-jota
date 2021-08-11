@@ -2,7 +2,7 @@ import 'dotenv/config';
 import fetch from 'node-fetch';
 import * as fs from 'fs';
 import * as path from 'path';
-import { workspace, window, WorkspaceFolder } from 'vscode';
+import { workspace, window, WorkspaceFolder, Uri } from 'vscode';
 
 export async function getProblemCode(
   currentSubmit: string
@@ -16,20 +16,42 @@ export async function getProblemCode(
   return problemCode;
 }
 
-export async function updateUesrCurrentSubmit(newSubmit: string) {
-  const userInfo = await getUserInfo();
-  if (!userInfo) return;
-  userInfo.currentSubmit = newSubmit;
-
+//메타파일의 Uri를 반환
+function getMetaFileUri(): Uri | undefined {
   const workSpaceFolders: readonly WorkspaceFolder[] | undefined =
     workspace.workspaceFolders;
   if (!workSpaceFolders) return undefined;
 
   const folderUri = workSpaceFolders[0].uri;
+  const saveFolderPath = '.jcode-jota';
+  const saveFolder = path.join(folderUri.path, saveFolderPath);
+  //폴더가 없다면 생성
+  !fs.existsSync(saveFolder) && fs.mkdirSync(saveFolder);
+
   const fileName = `submitMeta.json`;
   const fileUri = folderUri.with({
-    path: path.join(folderUri.path, fileName),
+    path: path.join(saveFolder, fileName),
   });
+  const time = new Date();
+
+  //파일 존재 확인
+  try {
+    fs.utimesSync(fileUri.path, time, time);
+  } catch (err) {
+    fs.closeSync(fs.openSync(fileUri.path, 'w'));
+  }
+
+  return fileUri;
+}
+
+//최근 제출 정보를 업데이트
+export async function updateUesrCurrentSubmit(newSubmit: string) {
+  const userInfo = await getUserInfo();
+  if (!userInfo) return;
+  userInfo.currentSubmit = newSubmit;
+
+  const fileUri = getMetaFileUri();
+  if (!fileUri) return;
 
   await workspace.fs.writeFile(
     fileUri,
@@ -37,6 +59,7 @@ export async function updateUesrCurrentSubmit(newSubmit: string) {
   );
 }
 
+//열려있는 editor의 텍스트를 반환
 export function getTextFromEditor(): String | undefined {
   const editor = window.activeTextEditor;
   if (editor) {
@@ -48,6 +71,7 @@ export function getTextFromEditor(): String | undefined {
   }
 }
 
+//메타파일을 읽어 유저의 정보를 가져옴
 export async function getUserInfo(): Promise<
   | {
       userID: string;
@@ -55,23 +79,8 @@ export async function getUserInfo(): Promise<
     }
   | undefined
 > {
-  const workSpaceFolders: readonly WorkspaceFolder[] | undefined =
-    workspace.workspaceFolders;
-  if (!workSpaceFolders) return undefined;
-
-  const folderUri = workSpaceFolders[0].uri;
-  const fileName = `submitMeta.json`;
-  const fileUri = folderUri.with({
-    path: path.join(folderUri.path, fileName),
-  });
-  const time = new Date();
-
-  //파일 존재 확인
-  try {
-    fs.utimesSync(fileUri.path, time, time);
-  } catch (err) {
-    fs.closeSync(fs.openSync(fileUri.path, 'w'));
-  }
+  const fileUri = getMetaFileUri();
+  if (!fileUri) return;
 
   const document = await workspace.openTextDocument(fileUri);
   const text = document.getText();
@@ -107,7 +116,7 @@ export async function getUserInfo(): Promise<
     const userInfo = JSON.parse(text);
     return userInfo;
   } catch (err) {
-    window.showErrorMessage(`${fileName} 형식 확인 필요.`);
+    window.showErrorMessage(`${fileUri.path} 형식 확인 필요.`);
   }
 }
 
