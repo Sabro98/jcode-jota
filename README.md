@@ -56,7 +56,7 @@ _두번째 제출부터는 유저의 아이디를 묻지 않고 문제 코드만
   `result/제출 날짜/{제출 문제 코드}@{제출 시각}.txt` 의 형식으로 저장
 
 - 텍스트 파일의 구성
-  ![submit_success](./images/submit_success.png)
+  ![submit_success](./images/result_text.png)
 
 ## 비정상적인 제출 결과
 
@@ -74,7 +74,7 @@ _두번째 제출부터는 유저의 아이디를 묻지 않고 문제 코드만
 ### Request
 
 ```
-# REST를 보낼 URL 정보
+# REST를 보낼 URL 정보 -> 테스트용 서버
 HOST: http://203.254.143.156:8001
 PATH: /api/v2/submit/jcode
 ```
