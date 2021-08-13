@@ -9,14 +9,14 @@ export async function submitCode(
   problemCode: String,
   sourceCode: String
 ): Promise<string[] | undefined> {
-  // const URL = process.env.SUBMIT_URL;
-  const URL = 'http://203.254.143.156:8001/api/v2/submit/jcode';
-  //   const URL = 'http://jota.jbnu.ac.kr/api/v2/submit/';
+  const HOST = 'http://203.254.143.156:8001';
+  const PATH = '/api/v2/submit/jcode';
+  const URL = `${HOST}${PATH}`;
+
   if (!URL) return;
   const data = {
     judge_id: 'jota-judge',
     language: 'C',
-    // jcode의 사용자 id를 사용해야하나? Jcode <-> Jota 계정 과의 연관성 확인 필요
     user: userId,
     problem: problemCode,
     source: sourceCode,
@@ -43,6 +43,7 @@ export async function submitCode(
     }
 
     const parsedPost = JSON.parse(post);
+    console.log(parsedPost);
 
     const results = makeResult(parsedPost);
     const resultsEmoj: string[] = [];

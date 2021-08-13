@@ -24,9 +24,9 @@ export function activate(context: ExtensionContext) {
     if (!submitResult) return;
 
     const emoji = submitResult[1].split(' ');
-    let displayResult = '';
+    let displayResult = `${problemCode} → `;
     emoji.forEach((emo, index) => {
-      displayResult += `#${index + 1}: ${emo} `;
+      displayResult += `#${index + 1}: ${emo}  `;
     });
     window.showInformationMessage(displayResult);
   });
