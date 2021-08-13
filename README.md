@@ -43,7 +43,7 @@ _두번째 제출부터는 유저의 아이디를 묻지 않고 문제 코드만
 //.jcode-jota/submitMeta.json
 {
   "userID": "admin",
-  "currentSubmit": "aminusb" //문제 코드 자동 완성에 사용
+  "currentSubmit": "aminusb"
 }
 ```
 
