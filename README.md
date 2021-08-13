@@ -19,47 +19,53 @@ node, npm이 정상적으로 설치되어있을 때
 
 ## Usage
 
-![usage_image]('./images/README_Usage.png') 그림에 표시된 아이콘을 클릭하여 소스코드를 제출
+### Submit
 
-처음 제출 시 유저의 아이디를 초기화  
-![usage_image]('./images/id_input.png')
+- 그림에 표시된 아이콘을 클릭하여 소스코드를 제출
+  ![usage_image](./images/README_Usage.png)
 
-제출할 문제 코드를 입력  
-![usage_image]('./images/problem_input.png')
+- 처음 제출 시 유저의 아이디를 초기화
+  ![usage_image](./images/id_input.png)
 
-두번째 제출부터는 유저의 아이디를 묻지 않고 문제 코드만 입력
+- 제출할 문제 코드를 입력  
+  ![usage_image](./images/problem_input.png)
 
-유저가 입력한 정보 (ID, 최근 제출한 문제) 는 .jcode-jota/submitMeta.json에 다음과 같이 저장
+_두번째 제출부터는 유저의 아이디를 묻지 않고 문제 코드만 입력_
+
+- 유저가 입력한 정보 (ID, 최근 제출한 문제) 는 `.jcode-jota/submitMeta.json`에 다음과 같이 저장
+  ![usage_image](./images/userInfo.png)
 
 ```JSON
-//user's information
+//.jcode-jota/submitMeta.json
 {
   "userID": "admin",
   "currentSubmit": "aminusb"
 }
-
 ```
 
-submitMeta.json 파일이 없다면 유저의 정보를 처음부터 다시 물어봄
+**submitMeta.json 파일이 없다면 유저의 정보를 처음부터 다시 물어봄**
 
 ### 정상적인 제출 결과
 
-![usage_image]('./images/submit_success.png') 그림과 같이 출력
+- 제출 결과
+  ![usage_image](./images/submit_success.png)
 
-![usage_image]('./images/result_folder.png') - 폴더 구성
+- 폴더 구성  
+   ![result_folder](./images/result_folder.png)  
+  제출 결과를 텍스트 파일로 result 폴더에
+  `result/제출 날짜/{제출 문제 코드}@{제출 시각}.txt` 의 형식으로 저장
 
-제출 결과를 텍스트 파일로 result 폴더에  
-"result/제출 날짜/{제출 문제 코드}@{제출 시각}.txt" 의 형식으로 저장  
-![usage_image]('./images/submit_success.png') - 텍스트 파일의 구성
+- 텍스트 파일의 구성
+  ![submit_success](./images/submit_success.png)
 
 ## 비정상적인 제출 결과
 
-- userID/problemCode 오류
+- userID/problemCode 오류  
   존재하지 않는 유저 ID 또는 존재하지 않는 문제 코드를 제출시
-  ![usage_image]('./images/id_code_error.png') 그림과 같이 에러메세지 출력
+  ![id_code_error](./images/id_code_error.png) 그림과 같이 에러메세지 출력
 
 - Compile Error(CE)
-  ![usage_image]('./images/CE.png') 세미콜론(';') 이 없는 상태에서 제출했을 때의 결과
+  ![Compile Error](./images/CE.png) 세미콜론(';') 이 없는 상태에서 제출했을 때의 결과
 
   컴파일 에러라는것을 알려주고, 자세한 정보를 확인할 수 있도록 제출 결과의 주소(Jota) 의 주소를 반환
 
@@ -76,17 +82,17 @@ PATH: /api/v2/submit/jcode
 ```JSON
 // 서버로 채점을 요청할 때의 형식
 {
-    method: 'POST',
-    body:
+    "method": "POST",
+    "body":
         {
-            'judge_id': 'jota-judge',
-            'language': 'C',
-            'user': user's ID,
-            'problem': target problemCode,
-            'source': user's sourceCode,
+            "judge_id": "jota-judge",
+            "language": "C",
+            "user": "user's ID",
+            "problem": "target problemCode",
+            "source": "user's sourceCode",
         },
-    headers: {
-        'Content-type': 'application/json',
+    "headers": {
+        "Content-type": "application/json",
     }
 }
 
