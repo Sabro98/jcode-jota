@@ -50,14 +50,21 @@ _두번째 제출부터는 유저의 아이디를 묻지 않고 문제 코드만
 ### 정상적인 제출 결과
 
 - 제출 결과
-  ![usage_image](./images/submit_success.png)
+
+  - 정답
+    ![AC_messageBox](./images/submit_success.png)
+  - 오답
+    ![WA_messageBox](./images/submit_wrong.png)
 
 - 제출 결과를 텍스트 파일로 result 폴더에  
   `result/제출 날짜/{제출 문제 코드}@{제출 시각}.txt` 의 형식으로 저장
   ![result_folder](./images/result_folder.png)
 
 - 텍스트 파일 구성
-  ![submit_success](./images/result_text.png)
+  - 정답
+    ![submit_AC_text](./images/result_ac_text.png)
+  - 오답
+    ![submit_WA_text](./images/result_wa_text.png)
 
 ## 비정상적인 제출 결과
 
@@ -67,13 +74,10 @@ _두번째 제출부터는 유저의 아이디를 묻지 않고 문제 코드만
   존재하지 않는 유저 ID 또는 존재하지 않는 문제 코드를 제출시
   ![id_code_error](./images/id_code_error.png) 그림과 같이 에러메세지 출력
 
-- Compile Error(CE)
-  세미콜론(';') 이 없는 상태에서 제출했을 때의 결과  
-  컴파일 에러라는것을 알려주고, 자세한 정보를 확인할 수 있도록 제출 결과의 주소(Jota) 의 주소를 반환
-  ![Compile Error](./images/CE.png)
+- 그 외 오류 (CE, TLE, RTE ...)  
+  자세한 정보를 확인할 수 있도록 제출 결과의 주소(Jota) 의 주소를 반환
 
-- 그 외 오류 (TLE, RTE ...)  
-   ...
+  ![Compile Error](./images/Error.png)
 
 ## REST API
 
