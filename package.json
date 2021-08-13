@@ -29,8 +29,8 @@
         "title": "Submit Code!",
         "category": "jcode",
         "icon": {
-          "light": "media/icons/submit-button-white.svg",
-          "dark": "media/icons/submit-button-white.svg"
+          "light": "media/icons/submit-light-theme.svg",
+          "dark": "media/icons/submit-dark-theme.svg"
         }
       }
     ],

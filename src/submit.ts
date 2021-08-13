@@ -1,123 +1,7 @@
 import fetch from 'node-fetch';
 import * as fs from 'fs';
 import * as path from 'path';
-import { workspace, window, WorkspaceFolder, Uri } from 'vscode';
-
-export async function getProblemCode(
-  currentSubmit: string
-): Promise<String | undefined> {
-  const problemCode = await window.showInputBox({
-    placeHolder: 'Write problem code',
-    value: currentSubmit,
-  });
-
-  if (problemCode) updateUesrCurrentSubmit(problemCode);
-  return problemCode;
-}
-
-//메타파일의 Uri를 반환
-function getMetaFileUri(): Uri | undefined {
-  const workSpaceFolders: readonly WorkspaceFolder[] | undefined =
-    workspace.workspaceFolders;
-  if (!workSpaceFolders) return undefined;
-
-  const folderUri = workSpaceFolders[0].uri;
-  const saveFolderPath = '.jcode-jota';
-  const saveFolder = path.join(folderUri.path, saveFolderPath);
-  //폴더가 없다면 생성
-  !fs.existsSync(saveFolder) && fs.mkdirSync(saveFolder);
-
-  const fileName = `submitMeta.json`;
-  const fileUri = folderUri.with({
-    path: path.join(saveFolder, fileName),
-  });
-  const time = new Date();
-
-  //파일 존재 확인
-  try {
-    fs.utimesSync(fileUri.path, time, time);
-  } catch (err) {
-    fs.closeSync(fs.openSync(fileUri.path, 'w'));
-  }
-
-  return fileUri;
-}
-
-//최근 제출 정보를 업데이트
-async function updateUesrCurrentSubmit(newSubmit: string) {
-  const userInfo = await getUserInfo();
-  if (!userInfo) return;
-  userInfo.currentSubmit = newSubmit;
-
-  const fileUri = getMetaFileUri();
-  if (!fileUri) return;
-
-  await workspace.fs.writeFile(
-    fileUri,
-    Buffer.from(JSON.stringify(userInfo), 'utf8')
-  );
-}
-
-//열려있는 editor의 텍스트를 반환
-export function getTextFromEditor(): String | undefined {
-  const editor = window.activeTextEditor;
-  if (editor) {
-    const document = editor.document;
-    let documentText = document.getText();
-    documentText = documentText.replace(/\r?\n/g, '\r\n');
-
-    return documentText;
-  }
-}
-
-//메타파일을 읽어 유저의 정보를 가져옴
-export async function getUserInfo(): Promise<
-  | {
-      userID: string;
-      currentSubmit: string;
-    }
-  | undefined
-> {
-  const fileUri = getMetaFileUri();
-  if (!fileUri) return;
-
-  const document = await workspace.openTextDocument(fileUri);
-  const text = document.getText();
-
-  //텍스트가 비어있다면 -> submit할 때 유저의 정보를 생성
-  if (text == '') {
-    window.showInformationMessage('유저 정보 초기화');
-    const userID = await window.showInputBox({
-      placeHolder: 'write your id',
-    });
-    if (!userID) return;
-
-    // userInfo -> {
-    //   id: id,
-    //   currentSubmit: submitProblemCode
-    // }
-    // 로 이루어져있음
-    const userInfo = {
-      userID,
-      currentSubmit: '',
-    };
-
-    //유저의 정보를 기록
-    await workspace.fs.writeFile(
-      fileUri,
-      Buffer.from(JSON.stringify(userInfo), 'utf8')
-    );
-    return userInfo;
-  }
-
-  // 내용이 있다면 JSON으로 변환
-  try {
-    const userInfo = JSON.parse(text);
-    return userInfo;
-  } catch (err) {
-    window.showErrorMessage(`${fileUri.path} 형식 확인 필요.`);
-  }
-}
+import { workspace, window, WorkspaceFolder } from 'vscode';
 
 // submit code to jota [params => (userId, problemCode, sourceCode)]
 export async function submitCode(
@@ -149,16 +33,18 @@ export async function submitCode(
   //send rest to URL
   try {
     const response = await fetch(URL, options);
-    const post: string = await response.json();
-
     //status code로 에러를 확인
-    if (response.status === 405) {
+
+    console.log(response.status);
+    const post: string = await response.json();
+    if (response.status !== 200) {
       window.showErrorMessage(post);
       return;
     }
+
     const parsedPost = JSON.parse(post);
 
-    const results = saveResult(parsedPost);
+    const results = makeResult(parsedPost);
     const resultsEmoj: string[] = [];
 
     results.forEach((result) =>
@@ -184,7 +70,8 @@ export async function submitCode(
   }
 }
 
-function saveResult(post: []): string[] {
+//post의 결과를 보여주기 위한 형식으로 변환
+function makeResult(post: []): string[] {
   const submitResultArrs: string[] = [];
 
   //process result for show
@@ -202,7 +89,7 @@ function saveResult(post: []): string[] {
 //save as text file
 async function saveResultAsFile(
   userId: String,
-  problemId: String,
+  problemCode: String,
   sourceCode: String,
   results: String[]
 ): Promise<string> {
@@ -232,13 +119,13 @@ async function saveResultAsFile(
   !fs.existsSync(basePath) && fs.mkdirSync(basePath);
 
   //파일의 최종 경로
-  const fileName = `Submission@${currDate.getHours()}:${currDate.getMinutes()}:${currDate.getSeconds()}.txt`;
+  const fileName = `${problemCode}@${currDate.getHours()}:${currDate.getMinutes()}:${currDate.getSeconds()}.txt`;
   const fileUri = folderUri.with({
     path: path.join(basePath, fileName),
   });
 
   //기록할 채점 결과 문자열 생성
-  let data = `Submission of ${problemId} by ${userId}\n\n`;
+  let data = `Submission of ${problemCode} by ${userId}\n\n`;
   data += '-------- Execution Results--------\n';
   results.forEach((result) => (data += result.includes('AC') ? '✅ ' : '❌ '));
   data += '\n';
@@ -249,5 +136,5 @@ async function saveResultAsFile(
   data += sourceCode;
 
   await workspace.fs.writeFile(fileUri, Buffer.from(data, 'utf8'));
-  return `Submission of ${problemId} by ${userId}`;
+  return `Submission of ${problemCode} by ${userId}`;
 }

@@ -3,12 +3,8 @@
 import * as vscode from 'vscode';
 import { ExtensionContext, commands, window } from 'vscode';
 
-import {
-  getTextFromEditor,
-  submitCode,
-  getProblemCode,
-  getUserInfo,
-} from './submit';
+import { submitCode } from './submit';
+import { getTextFromEditor, getProblemCode, getUserInfo } from './userHandle';
 
 // TODO: 아이콘 잘 보이도록 수정, 에러 체크
 
