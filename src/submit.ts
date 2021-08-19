@@ -51,17 +51,16 @@ export async function submitCode(
       resultsEmoj.push(result.includes('AC') ? '✅' : '❌')
     );
     //save result to ./result
-    // const savedPath = await saveResultAsFile(
-    //   userId,
-    //   problemCode,
-    //   sourceCode,
-    //   results
-    // );
+    const savedPath = await saveResultAsFile(
+      userId,
+      problemCode,
+      sourceCode,
+      results
+    );
 
     //final Result -> {savedFilename, resultEmoji, results}
     const finalResult: string[] = [];
-    // finalResult.push(savedPath);
-    finalResult.push('');
+    finalResult.push(savedPath);
     finalResult.push(resultsEmoj.join(' '));
     results.forEach((result) => finalResult.push(result));
 
