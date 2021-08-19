@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { window, workspace, Uri, WorkspaceFolder } from 'vscode';
+import { windowPath } from './function';
 
 //열려있는 editor의 텍스트를 반환
 export function getTextFromEditor(): String | undefined {
@@ -17,9 +18,9 @@ export function getTextFromEditor(): String | undefined {
 //메타파일을 읽어 유저의 정보를 가져옴
 export async function getUserInfo(): Promise<
   | {
-      userID: string;
-      currentSubmit: string;
-    }
+    userID: string;
+    currentSubmit: string;
+  }
   | undefined
 > {
   const fileUri = getMetaFileUri();
@@ -85,12 +86,12 @@ async function updateUesrCurrentSubmit(newSubmit: string) {
 
   const fileUri = getMetaFileUri();
   if (!fileUri) return;
-
   await workspace.fs.writeFile(
     fileUri,
     Buffer.from(JSON.stringify(userInfo), 'utf8')
   );
 }
+
 
 //메타파일의 Uri를 반환
 function getMetaFileUri(): Uri | undefined {
@@ -99,14 +100,17 @@ function getMetaFileUri(): Uri | undefined {
   if (!workSpaceFolders) return undefined;
 
   const folderUri = workSpaceFolders[0].uri;
-  const saveFolderPath = '.jcode-jota';
-  const saveFolder = path.join(folderUri.path, saveFolderPath);
+  const saveFolderName = '.jcode-jota';
+  let saveFolderPath = path.join(folderUri.path, saveFolderName);
+  if (process.platform === 'win32') saveFolderPath = windowPath(saveFolderPath);
   //폴더가 없다면 생성
-  !fs.existsSync(saveFolder) && fs.mkdirSync(saveFolder);
-
+  !fs.existsSync(saveFolderPath) && fs.mkdirSync(saveFolderPath);
   const fileName = `submitMeta.json`;
+  let saveFilePath = path.join(saveFolderPath, fileName);
+  if (process.platform === 'win32') saveFilePath = windowPath(saveFilePath);
+
   const fileUri = folderUri.with({
-    path: path.join(saveFolder, fileName),
+    path: saveFilePath,
   });
   const time = new Date();
 

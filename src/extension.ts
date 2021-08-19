@@ -9,6 +9,7 @@ import { getTextFromEditor, getProblemCode, getUserInfo } from './userHandle';
 // TODO: 아이콘 잘 보이도록 수정, 에러 체크
 
 export function activate(context: ExtensionContext) {
+  console.log("Start");
   // 커맨드 코드
   const command = 'jcode-jota.submitCode';
   const disposable = commands.registerCommand(command, async () => {
@@ -62,7 +63,7 @@ class SubmissionViewProvider implements vscode.WebviewViewProvider {
 
   private _view?: vscode.WebviewView;
 
-  constructor(private readonly _extensionUri: vscode.Uri) {}
+  constructor(private readonly _extensionUri: vscode.Uri) { }
 
   public resolveWebviewView(
     webviewView: vscode.WebviewView,
@@ -170,4 +171,4 @@ function getNonce() {
 }
 
 // this method is called when your extension is deactivated
-export function deactivate() {}
+export function deactivate() { }

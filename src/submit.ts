@@ -2,6 +2,7 @@ import fetch from 'node-fetch';
 import * as fs from 'fs';
 import * as path from 'path';
 import { workspace, window, WorkspaceFolder } from 'vscode';
+import { windowPath } from './function';
 
 // submit code to jota [params => (userId, problemCode, sourceCode)]
 export async function submitCode(
@@ -35,7 +36,6 @@ export async function submitCode(
     const response = await fetch(URL, options);
     //status code로 에러를 확인
 
-    console.log(response.status);
     const post: string = await response.json();
     if (response.status !== 200) {
       window.showErrorMessage(post);
@@ -43,7 +43,6 @@ export async function submitCode(
     }
 
     const parsedPost = JSON.parse(post);
-    console.log(parsedPost);
 
     const results = makeResult(parsedPost);
     const resultsEmoj: string[] = [];
@@ -52,16 +51,17 @@ export async function submitCode(
       resultsEmoj.push(result.includes('AC') ? '✅' : '❌')
     );
     //save result to ./result
-    const savedPath = await saveResultAsFile(
-      userId,
-      problemCode,
-      sourceCode,
-      results
-    );
+    // const savedPath = await saveResultAsFile(
+    //   userId,
+    //   problemCode,
+    //   sourceCode,
+    //   results
+    // );
 
     //final Result -> {savedFilename, resultEmoji, results}
     const finalResult: string[] = [];
-    finalResult.push(savedPath);
+    // finalResult.push(savedPath);
+    finalResult.push('');
     finalResult.push(resultsEmoj.join(' '));
     results.forEach((result) => finalResult.push(result));
 
@@ -101,8 +101,8 @@ async function saveResultAsFile(
   if (!workSpaceFolders) return '';
 
   const folderUri = workSpaceFolders[0].uri;
-  const parentPath = path.join(folderUri.path, saveFolderName);
-
+  let parentPath = path.join(folderUri.path, saveFolderName);
+  if (process.platform == 'win32') parentPath = windowPath(parentPath);
   //폴더가 없다면 생성
   !fs.existsSync(parentPath) && fs.mkdirSync(parentPath);
 
@@ -115,14 +115,24 @@ async function saveResultAsFile(
     month = _month.length == 1 ? '0' + _month : _month,
     date = _date.length == 1 ? '0' + _date : _date;
 
-  const basePath = path.join(parentPath, `${year}${month}${date}`);
+  let basePath = path.join(parentPath, `${year}${month}${date}`);
+  if (process.platform == 'win32') {
+    basePath = windowPath(basePath);
+    if (!basePath.includes('c:\\\\')) {
+      basePath = `c:\\\\${basePath}`;
+    }
+  }
 
   !fs.existsSync(basePath) && fs.mkdirSync(basePath);
 
   //파일의 최종 경로
   const fileName = `${problemCode}@${currDate.getHours()}:${currDate.getMinutes()}:${currDate.getSeconds()}.txt`;
+  let saveFilePath = path.join(basePath, fileName);
+  if (process.platform == 'win32') {
+    saveFilePath = windowPath(saveFilePath);
+  }
   const fileUri = folderUri.with({
-    path: path.join(basePath, fileName),
+    path: saveFilePath,
   });
 
   //기록할 채점 결과 문자열 생성
