@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { window, workspace, Uri, WorkspaceFolder } from 'vscode';
-import { readFile, windowPath } from './function';
+import { writeFile, readFile, windowPath } from './function';
 
 //열려있는 editor의 텍스트를 반환
 export function getTextFromEditor(): String | undefined {
@@ -48,11 +48,8 @@ export async function getUserInfo(): Promise<
     };
 
     //유저의 정보를 기록
-    await workspace.fs.writeFile(
-      fileUri,
-      Buffer.from(JSON.stringify(userInfo), 'utf8')
-    );
-
+    await writeFile(fileUri, JSON.stringify(userInfo));
+    
     return userInfo;
   }
 
@@ -86,10 +83,8 @@ async function updateUesrCurrentSubmit(newSubmit: string) {
 
   const fileUri = getMetaFileUri();
   if (!fileUri) return;
-  await workspace.fs.writeFile(
-    fileUri,
-    Buffer.from(JSON.stringify(userInfo), 'utf8')
-  );
+  
+  await writeFile(fileUri, JSON.stringify(userInfo));
 }
 
 

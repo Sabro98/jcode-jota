@@ -2,7 +2,7 @@ import fetch from 'node-fetch';
 import * as fs from 'fs';
 import * as path from 'path';
 import { workspace, window, WorkspaceFolder } from 'vscode';
-import { windowPath } from './function';
+import { windowPath, writeFile } from './function';
 
 // submit code to jota [params => (userId, problemCode, sourceCode)]
 export async function submitCode(
@@ -140,6 +140,6 @@ async function saveResultAsFile(
   //소스코드 첨부
   data += '\n\n---------------- SOURCE CODE ---------------- \n';
   data += sourceCode;
-  await workspace.fs.writeFile(fileUri, Buffer.from(data, 'utf8'));
+  await writeFile(fileUri, data);
   return `Submission of ${problemCode} by ${userId}`;
 }
