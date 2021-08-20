@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { window, workspace, Uri, WorkspaceFolder } from 'vscode';
-import { windowPath } from './function';
+import { readFile, windowPath } from './function';
 
 //열려있는 editor의 텍스트를 반환
 export function getTextFromEditor(): String | undefined {
@@ -26,8 +26,7 @@ export async function getUserInfo(): Promise<
   const fileUri = getMetaFileUri();
   if (!fileUri) return;
 
-  const document = await workspace.openTextDocument(fileUri);
-  const text = document.getText();
+  const text = await readFile(fileUri);
 
   //텍스트가 비어있다면 -> submit할 때 유저의 정보를 생성
   if (text == '') {
@@ -53,6 +52,7 @@ export async function getUserInfo(): Promise<
       fileUri,
       Buffer.from(JSON.stringify(userInfo), 'utf8')
     );
+
     return userInfo;
   }
 
@@ -103,8 +103,10 @@ function getMetaFileUri(): Uri | undefined {
   const saveFolderName = '.jcode-jota';
   let saveFolderPath = path.join(folderUri.path, saveFolderName);
   if (process.platform === 'win32') saveFolderPath = windowPath(saveFolderPath);
+
   //폴더가 없다면 생성
   !fs.existsSync(saveFolderPath) && fs.mkdirSync(saveFolderPath);
+
   const fileName = `submitMeta.json`;
   let saveFilePath = path.join(saveFolderPath, fileName);
   if (process.platform === 'win32') saveFilePath = windowPath(saveFilePath);
