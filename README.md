@@ -7,7 +7,7 @@ JCode에서 작성한 코드를 JOTA로 바로 제출하고, 결과를 받아볼
 ## Enviroment
 
 **node**: 14.15.4  
-**npm**: 7.20.2  
+**npm**: 7.20.2  (npm 버전 지정하는법 `npm install -g npm@7.20.2`)  
 **vscode**: ^1.57.0
 
 ## Prerequisite
