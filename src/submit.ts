@@ -114,12 +114,8 @@ async function saveResultAsFile(
 
   !fs.existsSync(basePath) && fs.mkdirSync(basePath, { recursive: true });
 
-  //파일의 최종 경로
-  let fileName = `${problemCode}@${currDate.getHours()}:${currDate.getMinutes()}:${currDate.getSeconds()}.txt`;
-
-  //windows에서 경로에 :가 들어가면 오류남 --> 왜 오류가 나는지 파악 필요
-  if (process.platform == 'win32')
-    fileName = `${problemCode}@${currDate.getHours()}h ${currDate.getMinutes()}m ${currDate.getSeconds()}s.txt`;
+  const hour = currDate.getHours().toString().padStart(2, '0'), minute = currDate.getMinutes().toString().padStart(2, '0'), sec = currDate.getSeconds().toString().padStart(2, '0');
+  const fileName = `${problemCode}@${hour}_${minute}_${sec}.txt`;
 
   let saveFilePath = path.join(basePath, fileName);
   if (process.platform == 'win32') {
