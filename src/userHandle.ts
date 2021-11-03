@@ -20,6 +20,7 @@ export async function getUserInfo(): Promise<
   | {
     userID: string;
     currentSubmit: string;
+    submitHistory: Array<string>,
   }
   | undefined
 > {
@@ -40,11 +41,13 @@ export async function getUserInfo(): Promise<
     // {
     //   id: id,
     //   currentSubmit: submitProblemCode
+    //   submitHistory: problemCodeList
     // }
     // 로 이루어져있음
     const userInfo = {
       userID,
       currentSubmit: '',
+      submitHistory: [],
     };
 
     //유저의 정보를 기록
@@ -80,6 +83,7 @@ async function updateUserCurrentSubmit(newSubmit: string) {
   const userInfo = await getUserInfo();
   if (!userInfo) return;
   userInfo.currentSubmit = newSubmit;
+  userInfo.submitHistory.push(newSubmit); //최근 제출 정보 히스토리에 추가
 
   const fileUri = getMetaFileUri();
   if (!fileUri) return;
