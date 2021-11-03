@@ -71,12 +71,12 @@ export async function getProblemCode(
   });
 
   //제출 후 문제 번호 업데이트
-  if (problemCode) updateUesrCurrentSubmit(problemCode);
+  if (problemCode) updateUserCurrentSubmit(problemCode);
   return problemCode;
 }
 
 //최근 제출 정보를 업데이트
-async function updateUesrCurrentSubmit(newSubmit: string) {
+async function updateUserCurrentSubmit(newSubmit: string) {
   const userInfo = await getUserInfo();
   if (!userInfo) return;
   userInfo.currentSubmit = newSubmit;
