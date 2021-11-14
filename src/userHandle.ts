@@ -17,6 +17,30 @@ export function getTextFromEditor(): String | undefined {
   }
 }
 
+//입력받은 정보를 사용해 Jota에 로그인 시도
+// status는 로그인 성공 -> 200, 실패 -> 500 을 반환
+async function loginUser(username: string, password: string): Promise<boolean> {
+  const HOST = "http://203.254.143.156:8001";
+  const PATH = "/api/v2/auth/user";
+  const URL = `${HOST}${PATH}`;
+  if (!URL) return false;
+  const data = {
+    username, password
+  }
+
+  const options = {
+    method: 'POST',
+    body: JSON.stringify(data),
+    headers: {
+      'Content-type': 'application/json',
+    },
+  };
+
+  const response = await fetch(URL, options);
+
+  return response.status == 200;
+}
+
 //메타파일을 읽어 유저의 정보를 가져옴
 export async function getUserInfo(): Promise<
   | {
@@ -38,6 +62,18 @@ export async function getUserInfo(): Promise<
       placeHolder: 'write your id',
     });
     if (!userID) return;
+    const userPwd = await window.showInputBox({
+      placeHolder: "write your password"
+    })
+    if (!userPwd) return;
+
+    //입력 받은 정보를 사용해 로그인 시도
+    if (!(await loginUser(userID, userPwd))) {
+      window.showErrorMessage("로그인 실패!! 정보를 다시 확인해주세요.");
+      return;
+    } else {
+      window.showInformationMessage("로그인 성공!!!")
+    }
 
     // --- userInfo ---
     // {
