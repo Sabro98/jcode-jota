@@ -119,11 +119,12 @@ export async function getProblemCode(
   const problemsInfoMap = new Map<string,string>();
 
   let validProblemList = await getProblemListfromJOTA(problemsInfoMap);
-  if(!validProblemList) return;
+  if (!validProblemList) return;
   const duplIdx = validProblemList.indexOf(currentSubmit); // 최근 제출 문제 인덱스 얻기
-  validProblemList.splice(duplIdx,1); // 삭제, 리스트 중복 해결
-  validProblemList.unshift(currentSubmit); // 최근 제출 문제 맨 앞에 삽입
-
+  if (duplIdx!=-1) {
+    validProblemList.splice(duplIdx,1); // 삭제, 리스트 중복 해결
+    validProblemList.unshift(currentSubmit); // 최근 제출 문제 맨 앞에 삽입
+  }
   if (!validProblemList) return;
   // showQuickPick : 전달해준 리스트에 있는 값만 problemCode로 리턴 가능 (새로운 값 입력 불가)
   const problemName = await window.showQuickPick(validProblemList, // 문제 이름 리스트 전달
