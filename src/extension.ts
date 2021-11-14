@@ -16,8 +16,7 @@ export function activate(context: ExtensionContext) {
     const userInfo = await getUserInfo();
     if (!userInfo) return;
     const { userID, currentSubmit } = userInfo;
-    // const problemCode = await getProblemCode(currentSubmit, submitHistory); // 추가) 제출코드 히스토리 전달
-    const problemCode = await getProblemCode(); // 전달 인자 필요 없음 (jota에서 문제리스트 가져오는 코드 추가 예정)
+    const problemCode = await getProblemCode(currentSubmit); 
     if (!problemCode) return;
     const sourceCode = getTextFromEditor();
     if (!sourceCode) return;

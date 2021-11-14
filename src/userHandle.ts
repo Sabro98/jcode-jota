@@ -103,7 +103,7 @@ export async function getUserInfo(): Promise<
 }
 // 제출할 문제 코드 리턴
 export async function getProblemCode(
-  // currentSubmit: string,
+  currentSubmit: string,
   // submitHistory: string[]
 ): Promise<String | undefined> {
   //--- showInputBox는 엔터를 쳐야 다음 단계로 넘어가짐 -> 엔터를 쳐야 문제코드 히스토리가 보이는 문제..
@@ -119,6 +119,10 @@ export async function getProblemCode(
   const problemsInfoMap = new Map<string,string>();
 
   let validProblemList = await getProblemListfromJOTA(problemsInfoMap);
+  if(!validProblemList) return;
+  const duplIdx = validProblemList.indexOf(currentSubmit); // 최근 제출 문제 인덱스 얻기
+  validProblemList.splice(duplIdx,1); // 삭제, 리스트 중복 해결
+  validProblemList.unshift(currentSubmit); // 최근 제출 문제 맨 앞에 삽입
 
   if (!validProblemList) return;
   // showQuickPick : 전달해준 리스트에 있는 값만 problemCode로 리턴 가능 (새로운 값 입력 불가)
