@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { isDate } from 'util';
+import fetch from 'node-fetch'
 import { window, workspace, Uri, WorkspaceFolder, commands } from 'vscode';
 import { getVSCodeDownloadUrl } from 'vscode-test/out/util';
 import { writeFile, readFile, windowPath } from './function';
@@ -21,7 +21,7 @@ export function getTextFromEditor(): String | undefined {
 export async function getUserInfo(): Promise<
   | {
     userID: string;
-    currentSubmit: string; 
+    currentSubmit: string;
     // submitHistory: Array<string>,
   }
   | undefined
@@ -47,13 +47,13 @@ export async function getUserInfo(): Promise<
     // 로 이루어져있음
     const userInfo = {
       userID,
-      currentSubmit: '', 
+      currentSubmit: '',
       // submitHistory: [],
     };
 
     //유저의 정보를 기록
     await writeFile(fileUri, JSON.stringify(userInfo));
-    
+
     return userInfo;
   }
 
@@ -78,21 +78,22 @@ export async function getProblemCode(
 
   let validProblemList = await getProblemListfromJOTA();
 
-  if(!validProblemList) return;
+  if (!validProblemList) return;
   // showQuickPick : 전달해준 리스트에 있는 값만 problemCode로 리턴 가능 (새로운 값 입력 불가)
-  const problemCode = await window.showQuickPick(validProblemList, 
-  {
+  const problemCode = await window.showQuickPick(validProblemList,
+    {
       placeHolder: 'Write problem code',
-  });
+    });
   if (problemCode) updateUserCurrentSubmit(problemCode);
   return problemCode;
 }
 
 // jota에서 존재하는 문제 코드를 가져와서 리스트로 반환하는 함수
 // input: 없음, output: 존재하는 문제 코드 리스트 (string[])
-async function getProblemListfromJOTA():Promise<string[] | undefined> {
+async function getProblemListfromJOTA(): Promise<string[] | undefined> {
+
   // TODO: jota에서 문제 코드 가져오기
-  let tempProblemList : string[] = ["aplusb","aminusb"]; // 임시 문제 코드 리스트
+  let tempProblemList: string[] = ["aplusb", "aminusb"]; // 임시 문제 코드 리스트
   return tempProblemList;
 }
 
@@ -101,13 +102,13 @@ async function updateUserCurrentSubmit(newSubmit: string) {
   const userInfo = await getUserInfo();
   if (!userInfo) return;
   userInfo.currentSubmit = newSubmit;
-  
+
   //-- Inputfield로 입력받는 경우 제출한 적 있는 문제 코드 저장하기 위한 용도
   // userInfo.submitHistory.push(newSubmit); //최근 제출 정보 히스토리에 추가
 
   const fileUri = getMetaFileUri();
   if (!fileUri) return;
-  
+
   await writeFile(fileUri, JSON.stringify(userInfo));
 }
 
