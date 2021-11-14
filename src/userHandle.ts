@@ -91,10 +91,27 @@ export async function getProblemCode(
 // jota에서 존재하는 문제 코드를 가져와서 리스트로 반환하는 함수
 // input: 없음, output: 존재하는 문제 코드 리스트 (string[])
 async function getProblemListfromJOTA(): Promise<string[] | undefined> {
+  const HOST = 'http://203.254.143.156:8001';
+  const PATH = '/api/v2/problems';
+  const URL = `${HOST}${PATH}`;
+  const response = await fetch(URL);
+  const post: {
+    data: {
+      objects: {
+        code: string,
+        group: string,
+        name: string,
+        partial: boolean,
+        points: number,
+        types: string[]
+      }[]
+    }
+  } = await response.json();
 
-  // TODO: jota에서 문제 코드 가져오기
-  let tempProblemList: string[] = ["aplusb", "aminusb"]; // 임시 문제 코드 리스트
-  return tempProblemList;
+  const problems = post.data.objects;
+  const problemCodes = problems.map((problem) => problem.code);
+  // let tempProblemList: string[] = ["aplusb", "aminusb"]; // 임시 문제 코드 리스트
+  return problemCodes;
 }
 
 //최근 제출 정보를 업데이트
