@@ -1,6 +1,8 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { window, workspace, Uri, WorkspaceFolder } from 'vscode';
+import { isDate } from 'util';
+import { window, workspace, Uri, WorkspaceFolder, commands } from 'vscode';
+import { getVSCodeDownloadUrl } from 'vscode-test/out/util';
 import { writeFile, readFile, windowPath } from './function';
 
 //열려있는 editor의 텍스트를 반환
@@ -19,7 +21,8 @@ export function getTextFromEditor(): String | undefined {
 export async function getUserInfo(): Promise<
   | {
     userID: string;
-    currentSubmit: string;
+    currentSubmit: string; 
+    // submitHistory: Array<string>,
   }
   | undefined
 > {
@@ -44,7 +47,8 @@ export async function getUserInfo(): Promise<
     // 로 이루어져있음
     const userInfo = {
       userID,
-      currentSubmit: '',
+      currentSubmit: '', 
+      // submitHistory: [],
     };
 
     //유저의 정보를 기록
@@ -61,25 +65,45 @@ export async function getUserInfo(): Promise<
     window.showErrorMessage(`${fileUri.path} 형식 확인 필요.`);
   }
 }
-
+// 제출할 문제 코드 리턴
 export async function getProblemCode(
-  currentSubmit: string
+  // currentSubmit: string,
+  // submitHistory: string[]
 ): Promise<String | undefined> {
-  const problemCode = await window.showInputBox({
-    placeHolder: 'Write problem code',
-    value: currentSubmit,
-  });
+  //--- showInputBox는 엔터를 쳐야 다음 단계로 넘어가짐 -> 엔터를 쳐야 문제코드 히스토리가 보이는 문제..
+  // const problemCode = await window.showInputBox({
+  //   placeHolder: 'Write problem code',
+  //   value: currentSubmit,
+  // });
 
-  //제출 후 문제 번호 업데이트
-  if (problemCode) updateUesrCurrentSubmit(problemCode);
+  let validProblemList = await getProblemListfromJOTA();
+
+  if(!validProblemList) return;
+  // showQuickPick : 전달해준 리스트에 있는 값만 problemCode로 리턴 가능 (새로운 값 입력 불가)
+  const problemCode = await window.showQuickPick(validProblemList, 
+  {
+      placeHolder: 'Write problem code',
+  });
+  if (problemCode) updateUserCurrentSubmit(problemCode);
   return problemCode;
 }
 
+// jota에서 존재하는 문제 코드를 가져와서 리스트로 반환하는 함수
+// input: 없음, output: 존재하는 문제 코드 리스트 (string[])
+async function getProblemListfromJOTA():Promise<string[] | undefined> {
+  // TODO: jota에서 문제 코드 가져오기
+  let tempProblemList : string[] = ["aplusb","aminusb"]; // 임시 문제 코드 리스트
+  return tempProblemList;
+}
+
 //최근 제출 정보를 업데이트
-async function updateUesrCurrentSubmit(newSubmit: string) {
+async function updateUserCurrentSubmit(newSubmit: string) {
   const userInfo = await getUserInfo();
   if (!userInfo) return;
   userInfo.currentSubmit = newSubmit;
+  
+  //-- Inputfield로 입력받는 경우 제출한 적 있는 문제 코드 저장하기 위한 용도
+  // userInfo.submitHistory.push(newSubmit); //최근 제출 정보 히스토리에 추가
 
   const fileUri = getMetaFileUri();
   if (!fileUri) return;
