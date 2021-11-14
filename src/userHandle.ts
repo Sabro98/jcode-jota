@@ -80,37 +80,38 @@ export async function getProblemCode(
 
   if (!validProblemList) return;
   // showQuickPick : 전달해준 리스트에 있는 값만 problemCode로 리턴 가능 (새로운 값 입력 불가)
-  const problemCode = await window.showQuickPick(validProblemList,
+  const problemCode = await window.showQuickPick(validProblemList, // 문제 이름 리스트 전달
     {
       placeHolder: 'Write problem code',
     });
+  // TODO: < key : 문제 이름, value: 문제 코드 > 인 map 만들기
   if (problemCode) updateUserCurrentSubmit(problemCode);
-  return problemCode;
+  return problemCode; // 문제 코드 리턴
 }
 
-// jota에서 존재하는 문제 코드를 가져와서 리스트로 반환하는 함수
-// input: 없음, output: 존재하는 문제 코드 리스트 (string[])
+// jota에서 존재하는 문제 이름을 가져와서 리스트로 반환하는 함수
+// input: 없음, output: 존재하는 문제 이름 리스트 (string[])
 async function getProblemListfromJOTA(): Promise<string[] | undefined> {
   const HOST = 'http://203.254.143.156:8001';
   const PATH = '/api/v2/problems';
   const URL = `${HOST}${PATH}`;
-  const response = await fetch(URL);
+  const response = await fetch(URL); 
   const post: {
     data: {
       objects: {
-        code: string,
+        code: string, // 문제 코드 -> 채점을 위해 JOTA에 전달해야하는 정보
         group: string,
-        name: string,
+        name: string, // 문제 이름 -> 사용자에게 보여줘야 하는 정보 (=> QuickPick 리스트 name으로 이루어진 배열)
         partial: boolean,
         points: number,
         types: string[]
       }[]
     }
   } = await response.json();
-
-  const problems = post.data.objects;
-  const problemCodes = problems.map((problem) => problem.code);
+  const JOTAproblemsInfo = post.data.objects; // JOTA에 존재하는 문제 정보(problemCode, problemName등) 가져옴
+  const problemCodes = JOTAproblemsInfo.map((problem) => problem.code);
   // let tempProblemList: string[] = ["aplusb", "aminusb"]; // 임시 문제 코드 리스트
+  // TODO : 문제 이름으로 반환
   return problemCodes;
 }
 
