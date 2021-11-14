@@ -76,22 +76,33 @@ export async function getProblemCode(
   //   value: currentSubmit,
   // });
 
-  let validProblemList = await getProblemListfromJOTA();
+  // ---problemsInfo---
+  // from JOTA (JOTA에 현재 존재하는 문제의 정보)
+  // <key:string, value:string>
+  // key: problemName, value: problemCode
+  const problemsInfoMap = new Map<string,string>();
+
+  let validProblemList = await getProblemListfromJOTA(problemsInfoMap);
 
   if (!validProblemList) return;
   // showQuickPick : 전달해준 리스트에 있는 값만 problemCode로 리턴 가능 (새로운 값 입력 불가)
-  const problemCode = await window.showQuickPick(validProblemList, // 문제 이름 리스트 전달
+  const problemName = await window.showQuickPick(validProblemList, // 문제 이름 리스트 전달
     {
       placeHolder: 'Write problem code',
     });
-  // TODO: < key : 문제 이름, value: 문제 코드 > 인 map 만들기
-  if (problemCode) updateUserCurrentSubmit(problemCode);
+  let problemCode;
+  if (problemName) {
+    updateUserCurrentSubmit(problemName);
+    problemCode = problemsInfoMap.get(problemName); // key를 입력해서 value를 얻어옴
+  }
   return problemCode; // 문제 코드 리턴
 }
 
 // jota에서 존재하는 문제 이름을 가져와서 리스트로 반환하는 함수
 // input: 없음, output: 존재하는 문제 이름 리스트 (string[])
-async function getProblemListfromJOTA(): Promise<string[] | undefined> {
+async function getProblemListfromJOTA(
+  problemsInfoMap: Map<string, string>, // <name, code>
+): Promise<string[] | undefined> {
   const HOST = 'http://203.254.143.156:8001';
   const PATH = '/api/v2/problems';
   const URL = `${HOST}${PATH}`;
@@ -109,10 +120,16 @@ async function getProblemListfromJOTA(): Promise<string[] | undefined> {
     }
   } = await response.json();
   const JOTAproblemsInfo = post.data.objects; // JOTA에 존재하는 문제 정보(problemCode, problemName등) 가져옴
-  const problemCodes = JOTAproblemsInfo.map((problem) => problem.code);
+  const problemNames = JOTAproblemsInfo.map((problem) => problem.name); // 문제 이름 저장, QuickPick 리스트가 배열을 받으므로 따로 이름 배열로 저장
+
+  // 문제 이름과 문제 코드로 이루어진 map 생성
+  // --- < key : 문제 이름, value: 문제 코드 > 인 map ---
+  JOTAproblemsInfo.forEach(element => { // 문제를 하나씩 읽어옴 // 3문제면 3번 반복
+    problemsInfoMap.set(element.name, element.code); // (key, value)
+  });
+
   // let tempProblemList: string[] = ["aplusb", "aminusb"]; // 임시 문제 코드 리스트
-  // TODO : 문제 이름으로 반환
-  return problemCodes;
+  return problemNames; // 문제 이름으로 반환
 }
 
 //최근 제출 정보를 업데이트
