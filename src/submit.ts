@@ -9,7 +9,13 @@ export async function submitCode(
   userId: String,
   problemCode: String,
   sourceCode: String
-): Promise<string[] | undefined> {
+): Promise<
+  {
+    finalResult: string[],
+    JotaURL: string
+  }
+  | undefined
+> {
   const HOST = 'http://203.254.143.156:8001';
   const PATH = '/api/v2/submit/jcode';
   const URL = `${HOST}${PATH}`;
@@ -34,17 +40,28 @@ export async function submitCode(
   //send rest to URL
   try {
     const response = await fetch(URL, options);
-    //status code로 에러를 확인
 
     const post: string = await response.json();
-    if (response.status !== 200) {
-      window.showErrorMessage(post);
+    const parsedPost: {
+      status: number,
+      result: any[],
+      JotaURL: string
+    } = JSON.parse(post);
+
+    // status -> 정상적인 결과: 200, 비정상 결과: 405
+    // result -> 정상적인 결과: 정답들의 array, 비정상 결과: 에러 코드가 포함된 size 1의 array
+    // JotaURL -> 해당 제출과 연결된 Jota의 URL
+    const { status, result, JotaURL } = parsedPost;
+
+    //제출한 code에 에러가 있는 상황
+    if (status !== 200) {
+      //URL을 포함해서 보여주면 될듯
+      // console.log(JotaURL);
+      window.showErrorMessage(`!!${result[0]}!! error in code!!! `);
       return;
     }
 
-    const parsedPost = JSON.parse(post);
-
-    const results = makeResult(parsedPost);
+    const results = makeResult(result);
     const resultsEmoj: string[] = [];
 
     results.forEach((result) =>
@@ -64,14 +81,14 @@ export async function submitCode(
     finalResult.push(resultsEmoj.join(' '));
     results.forEach((result) => finalResult.push(result));
 
-    return finalResult;
+    return { finalResult, JotaURL };
   } catch (error) {
     window.showErrorMessage(`Error: ${error}`);
   }
 }
 
 //post의 결과를 보여주기 위한 형식으로 변환
-function makeResult(post: []): string[] {
+function makeResult(post: any[]): string[] {
   const submitResultArrs: string[] = [];
 
   //process result for show

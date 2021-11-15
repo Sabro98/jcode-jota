@@ -16,19 +16,24 @@ export function activate(context: ExtensionContext) {
     const userInfo = await getUserInfo();
     if (!userInfo) return;
     const { userID, currentSubmit } = userInfo;
-    const problemCode = await getProblemCode(currentSubmit); 
+    const problemCode = await getProblemCode(currentSubmit);
     if (!problemCode) return;
     const sourceCode = getTextFromEditor();
     if (!sourceCode) return;
 
-    const submitResult = await submitCode(userID, problemCode, sourceCode);
-    if (!submitResult) return;
+    const submitResultObj = await submitCode(userID, problemCode, sourceCode);
+    if (!submitResultObj) return;
+    const submitResult = submitResultObj.finalResult;
+    const JotaURL = submitResultObj.JotaURL;
 
     const emoji = submitResult[1].split(' ');
     let displayResult = `${problemCode} → `;
     emoji.forEach((emo, index) => {
       displayResult += `#${index + 1}: ${emo}  `;
     });
+
+    //최종 결과를 보여줄 때 여기에서 JotaURL으로 이동하는 버튼을 같이 보여주면 될듯
+    // console.log(JotaURL);
     window.showInformationMessage(displayResult);
   });
 
@@ -90,7 +95,8 @@ class SubmissionViewProvider implements vscode.WebviewViewProvider {
           const sourceCode = getTextFromEditor();
           if (!sourceCode) return;
 
-          const results = await submitCode(id, problemCode, sourceCode);
+          const resultsObj = await submitCode(id, problemCode, sourceCode);
+          const results = resultsObj?.finalResult;
           if (results) this.updateResult(results);
       }
     });
