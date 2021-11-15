@@ -116,13 +116,13 @@ export async function getProblemCode(
   // from JOTA (JOTA에 현재 존재하는 문제의 정보)
   // <key:string, value:string>
   // key: problemName, value: problemCode
-  const problemsInfoMap = new Map<string,string>();
+  const problemsInfoMap = new Map<string, string>();
 
   let validProblemList = await getProblemListfromJOTA(problemsInfoMap);
   if (!validProblemList) return;
-  const duplIdx = validProblemList.indexOf(currentSubmit); // 최근 제출 문제 인덱스 얻기
-  if (duplIdx!=-1) {
-    validProblemList.splice(duplIdx,1); // 삭제, 리스트 중복 해결
+  const HighPriorityIdx = validProblemList.indexOf(currentSubmit); // 최근 제출 문제 인덱스 얻기
+  if (HighPriorityIdx != -1) {
+    validProblemList.splice(HighPriorityIdx, 1); // 삭제, 리스트 중복 해결
     validProblemList.unshift(currentSubmit); // 최근 제출 문제 맨 앞에 삽입
   }
   if (!validProblemList) return;
@@ -131,12 +131,16 @@ export async function getProblemCode(
     {
       placeHolder: 'Write problem code',
     });
-  let problemCode;
-  if (problemName) {
-    updateUserCurrentSubmit(problemName);
-    problemCode = problemsInfoMap.get(problemName); // key를 입력해서 value를 얻어옴
-  }
+
+  if (!problemName) return;
+  updateUserCurrentSubmit(problemName);
+  const problemCode = problemsInfoMap.get(problemName); // key를 입력해서 value를 얻어옴
+
   return problemCode; // 문제 코드 리턴
+}
+
+function formattingProblem(name: string, code: string): string {
+  return `${name} (${code})`;
 }
 
 // jota에서 존재하는 문제 이름을 가져와서 리스트로 반환하는 함수
@@ -147,7 +151,7 @@ async function getProblemListfromJOTA(
   const HOST = 'http://203.254.143.156:8001';
   const PATH = '/api/v2/problems';
   const URL = `${HOST}${PATH}`;
-  const response = await fetch(URL); 
+  const response = await fetch(URL);
   const post: {
     data: {
       objects: {
@@ -161,12 +165,12 @@ async function getProblemListfromJOTA(
     }
   } = await response.json();
   const JOTAproblemsInfo = post.data.objects; // JOTA에 존재하는 문제 정보(problemCode, problemName등) 가져옴
-  const problemNames = JOTAproblemsInfo.map((problem) => problem.name); // 문제 이름 저장, QuickPick 리스트가 배열을 받으므로 따로 이름 배열로 저장
+  const problemNames = JOTAproblemsInfo.map((problem) => formattingProblem(problem.name, problem.code)); // 문제 이름 저장, QuickPick 리스트가 배열을 받으므로 따로 이름 배열로 저장
 
   // 문제 이름과 문제 코드로 이루어진 map 생성
   // --- < key : 문제 이름, value: 문제 코드 > 인 map ---
   JOTAproblemsInfo.forEach(element => { // 문제를 하나씩 읽어옴 // 3문제면 3번 반복
-    problemsInfoMap.set(element.name, element.code); // (key, value)
+    problemsInfoMap.set(formattingProblem(element.name, element.code), element.code); // (key, value)
   });
 
   // let tempProblemList: string[] = ["aplusb", "aminusb"]; // 임시 문제 코드 리스트
