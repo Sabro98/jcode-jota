@@ -153,6 +153,13 @@ async function getProblemListfromJOTA(
   const PATH = '/api/v2/problems';
   const URL = `${HOST}${PATH}`;
   const response = await fetch(URL);
+
+  // const tmp = "/api/v2/user/contest/inhyuk"; //user contest 정보
+  const tmp = "/api/v2/contest/problem/test"; //contest problem 정보
+  const tmp_URL = `${HOST}${tmp}`;
+  const tmp_response = await fetch(tmp_URL);
+  console.log(await tmp_response.json());
+
   const post: {
     data: {
       objects: {
