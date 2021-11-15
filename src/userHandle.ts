@@ -139,6 +139,7 @@ export async function getProblemCode(
   return problemCode; // 문제 코드 리턴
 }
 
+//User에게 보여질 problem Name (problem Code)를 formatting 해주는 함수
 function formattingProblem(name: string, code: string): string {
   return `${name} (${code})`;
 }
