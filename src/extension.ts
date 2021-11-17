@@ -36,7 +36,7 @@ export function activate(context: ExtensionContext) {
     // console.log(JotaURL);
     const buttonText = 'Show Details';
     const click = await window.showInformationMessage(displayResult, buttonText);
-    if(!click) return;
+    if (!click) return;
     showDetails(JotaURL); // 버튼 누르면 jota 채점 페이지로 이동
   });
 

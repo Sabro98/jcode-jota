@@ -1,9 +1,8 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import fetch from 'node-fetch'
 import { window, workspace, Uri, WorkspaceFolder, commands } from 'vscode';
-import { getVSCodeDownloadUrl } from 'vscode-test/out/util';
-import { writeFile, readFile, windowPath, encodeUserId } from './function';
+import { writeFile, readFile, windowPath, encodeUserId, decodeUserID } from './function';
+import { REST_loginUser, REST_getProblemListFromJOTA, REST_contestProblems, REST_userParticipate } from './jotaRest';
 
 //열려있는 editor의 텍스트를 반환
 export function getTextFromEditor(): string | undefined {
@@ -15,30 +14,6 @@ export function getTextFromEditor(): string | undefined {
 
     return documentText;
   }
-}
-
-//입력받은 정보를 사용해 Jota에 로그인 시도
-// status는 로그인 성공 -> 200, 실패 -> 500 을 반환
-async function loginUser(username: string, password: string): Promise<boolean> {
-  const HOST = "http://203.254.143.156:8001";
-  const PATH = "/api/v2/auth/user";
-  const URL = `${HOST}${PATH}`;
-  if (!URL) return false;
-  const data = {
-    username, password
-  }
-
-  const options = {
-    method: 'POST',
-    body: JSON.stringify(data),
-    headers: {
-      'Content-type': 'application/json',
-    },
-  };
-
-  const response = await fetch(URL, options);
-
-  return response.status == 200;
 }
 
 //메타파일을 읽어 유저의 정보를 가져옴
@@ -57,7 +32,7 @@ export async function getUserInfo(): Promise<
 
   //텍스트가 비어있다면 -> submit할 때 유저의 정보를 생성
   if (text == '') {
-    window.showInformationMessage('유저 정보 초기화');
+    window.showInformationMessage('로그인 시도!');
     const userID = await window.showInputBox({
       placeHolder: 'write your id',
     });
@@ -68,7 +43,7 @@ export async function getUserInfo(): Promise<
     if (!userPwd) return;
 
     //입력 받은 정보를 사용해 로그인 시도
-    if (!(await loginUser(userID, userPwd))) {
+    if (!(await REST_loginUser(userID, userPwd))) {
       window.showErrorMessage("로그인 실패!! 정보를 다시 확인해주세요.");
       return;
     } else {
@@ -77,7 +52,7 @@ export async function getUserInfo(): Promise<
 
     // --- userInfo ---
     // {
-    //   id: id,
+    //   id: id (encoded),
     //   currentSubmit: submitProblemCode
     // }
     // 로 이루어져있음
@@ -92,8 +67,7 @@ export async function getUserInfo(): Promise<
 
     text = await readFile(fileUri);
   }
-
-  // 내용이 있다면 JSON으로 변환 후 id decode
+  // 내용이 있다면 JSON으로 변환
   try {
     const userInfo: {
       userID: string,
@@ -104,7 +78,35 @@ export async function getUserInfo(): Promise<
     window.showErrorMessage(`${fileUri.path} 형식 확인 필요.`);
   }
 }
-// 제출할 문제 코드 리턴
+
+// Return problems at contest wherer input user participated
+// !!notice!! user id isn't encoded
+async function getUserContestProblems(encodedUserID: string):
+  Promise<
+    {
+      code: string // problems code
+      is_pretesed: boolean
+      label: string
+      max_submissions: number
+      name: string // problems name
+      partial: boolean
+      points: number
+      contest: string
+    }[]
+    | undefined
+  > {
+  // input: user's id (encoded)
+  // output: List of contest's problem
+
+  const userID = decodeUserID(encodedUserID);
+  const contestKey = await REST_userParticipate(userID);
+  if (!contestKey) return;
+  const problems = await REST_contestProblems(contestKey);
+
+  return problems;
+}
+
+// Return source code that user want to submit
 export async function getProblemCode(
   currentSubmit: string,
   // submitHistory: string[]
@@ -121,7 +123,7 @@ export async function getProblemCode(
   // key: problemName, value: problemCode
   const problemsInfoMap = new Map<string, string>();
 
-  let validProblemList = await getProblemListfromJOTA(problemsInfoMap);
+  let validProblemList = await REST_getProblemListFromJOTA(problemsInfoMap);
   if (!validProblemList) return;
   const HighPriorityIdx = validProblemList.indexOf(currentSubmit); // 최근 제출 문제 인덱스 얻기
   if (HighPriorityIdx != -1) {
@@ -140,52 +142,6 @@ export async function getProblemCode(
   const problemCode = problemsInfoMap.get(problemName); // key를 입력해서 value를 얻어옴
 
   return problemCode; // 문제 코드 리턴
-}
-
-//User에게 보여질 problem Name (problem Code)를 formatting 해주는 함수
-function formattingProblem(name: string, code: string): string {
-  return `${name} (${code})`;
-}
-
-// jota에서 존재하는 문제 이름을 가져와서 리스트로 반환하는 함수
-// input: 없음, output: 존재하는 문제 이름 리스트 (string[])
-async function getProblemListfromJOTA(
-  problemsInfoMap: Map<string, string>, // <name, code>
-): Promise<string[] | undefined> {
-  const HOST = 'http://203.254.143.156:8001';
-  const PATH = '/api/v2/problems';
-  const URL = `${HOST}${PATH}`;
-  const response = await fetch(URL);
-
-  // const tmp = "/api/v2/user/contest/inhyuk"; //user contest 정보
-  const tmp = "/api/v2/contest/problem/test"; //contest problem 정보
-  const tmp_URL = `${HOST}${tmp}`;
-  const tmp_response = await fetch(tmp_URL);
-  console.log(await tmp_response.json());
-
-  const post: {
-    data: {
-      objects: {
-        code: string, // 문제 코드 -> 채점을 위해 JOTA에 전달해야하는 정보
-        group: string,
-        name: string, // 문제 이름 -> 사용자에게 보여줘야 하는 정보 (=> QuickPick 리스트 name으로 이루어진 배열)
-        partial: boolean,
-        points: number,
-        types: string[]
-      }[]
-    }
-  } = await response.json();
-  const JOTAproblemsInfo = post.data.objects; // JOTA에 존재하는 문제 정보(problemCode, problemName등) 가져옴
-  const problemNames = JOTAproblemsInfo.map((problem) => formattingProblem(problem.name, problem.code)); // 문제 이름 저장, QuickPick 리스트가 배열을 받으므로 따로 이름 배열로 저장
-
-  // 문제 이름과 문제 코드로 이루어진 map 생성
-  // --- < key : 문제 이름, value: 문제 코드 > 인 map ---
-  JOTAproblemsInfo.forEach(element => { // 문제를 하나씩 읽어옴 // 3문제면 3번 반복
-    problemsInfoMap.set(formattingProblem(element.name, element.code), element.code); // (key, value)
-  });
-
-  // let tempProblemList: string[] = ["aplusb", "aminusb"]; // 임시 문제 코드 리스트
-  return problemNames; // 문제 이름으로 반환
 }
 
 //최근 제출 정보를 업데이트
