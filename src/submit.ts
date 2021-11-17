@@ -1,14 +1,15 @@
 import fetch from 'node-fetch';
 import * as fs from 'fs';
 import * as path from 'path';
-import { workspace, window, WorkspaceFolder } from 'vscode';
-import { windowPath, writeFile, showDetails } from './function';
+
+import { workspace, window, WorkspaceFolder, env, Uri } from 'vscode';
+import { windowPath, writeFile, showDetails, decodeUserID } from './function';
 
 // submit code to jota [params => (userId, problemCode, sourceCode)]
 export async function submitCode(
-  userId: String,
-  problemCode: String,
-  sourceCode: String
+  encodedUserId: string,
+  problemCode: string,
+  sourceCode: string
 ): Promise<
   {
     finalResult: string[],
@@ -21,6 +22,7 @@ export async function submitCode(
   const URL = `${HOST}${PATH}`;
 
   if (!URL) return;
+  const userId = decodeUserID(encodedUserId);
   const data = {
     judge_id: 'jota-judge',
     language: 'C',
@@ -86,7 +88,7 @@ export async function submitCode(
 
     return { finalResult, JotaURL };
   } catch (error) {
-    window.showErrorMessage(`Error: ${error}`);
+    window.showErrorMessage(`Error: id를 다시 확인해 주세요!`);
   }
 }
 

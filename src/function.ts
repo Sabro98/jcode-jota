@@ -19,8 +19,6 @@ export async function writeFile(fileUri: Uri, text: string) {
   await workspace.fs.writeFile(fileUri, Buffer.from(text, 'utf8'));
 }
 
-export async function showDetails(click: string, button: string, JotaURL: string){
-  //if(click === button){ 
+export async function showDetails(JotaURL: string){
     env.openExternal(Uri.parse(JotaURL)); // 버튼 누르면 해당 URL로 이동
-  //}
 }
