@@ -1,8 +1,8 @@
 import fetch from 'node-fetch';
 import * as fs from 'fs';
 import * as path from 'path';
-import { workspace, window, WorkspaceFolder, env, Uri } from 'vscode';
-import { windowPath, writeFile } from './function';
+import { workspace, window, WorkspaceFolder } from 'vscode';
+import { windowPath, writeFile, showDetails } from './function';
 
 // submit code to jota [params => (userId, problemCode, sourceCode)]
 export async function submitCode(
@@ -53,17 +53,14 @@ export async function submitCode(
     // JotaURL -> 해당 제출과 연결된 Jota의 URL
     const { status, result, JotaURL } = parsedPost;
 
-    let GoToJOTA = 'Show Details';
     //제출한 code에 에러가 있는 상황
     if (status !== 200) {
       //URL을 포함해서 보여주면 될듯
       // console.log(JotaURL);
-      window.showErrorMessage(`!!${result[0]}!! error in code!!! `, GoToJOTA)
-        .then(selection => {
-          if(selection === GoToJOTA){
-            env.openExternal(Uri.parse(JotaURL)) // 버튼 누르면 해당 URL로 이동
-          }
-        });
+      const buttonText = 'Show Details';
+      const click = await window.showErrorMessage(`!!${result[0]}!! error in code!!! `, buttonText);
+      if(!click) return;
+      showDetails(JotaURL); // 버튼 누르면 jota 채점 페이지로 이동
       return;
     }
 

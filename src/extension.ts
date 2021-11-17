@@ -1,8 +1,8 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
-import { ExtensionContext, commands, window, env, Uri } from 'vscode';
-
+import { ExtensionContext, commands, window } from 'vscode';
+import { showDetails } from './function';
 import { submitCode } from './submit';
 import { getTextFromEditor, getProblemCode, getUserInfo } from './userHandle';
 
@@ -34,13 +34,10 @@ export function activate(context: ExtensionContext) {
 
     //최종 결과를 보여줄 때 여기에서 JotaURL으로 이동하는 버튼을 같이 보여주면 될듯
     // console.log(JotaURL);
-    let GoToJOTA = 'Show Details';
-    window.showInformationMessage(displayResult, GoToJOTA) 
-      .then(selection => {
-        if(selection === GoToJOTA){
-          env.openExternal(Uri.parse(JotaURL)) // 버튼 누르면 해당 URL로 이동
-        }
-      });
+    const buttonText = 'Show Details';
+    const click = await window.showInformationMessage(displayResult, buttonText);
+    if(!click) return;
+    showDetails(JotaURL); // 버튼 누르면 jota 채점 페이지로 이동
   });
 
   context.subscriptions.push(disposable);
