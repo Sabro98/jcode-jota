@@ -3,10 +3,10 @@ import * as path from 'path';
 import fetch from 'node-fetch'
 import { window, workspace, Uri, WorkspaceFolder, commands } from 'vscode';
 import { getVSCodeDownloadUrl } from 'vscode-test/out/util';
-import { writeFile, readFile, windowPath } from './function';
+import { writeFile, readFile, windowPath, encodeUserId } from './function';
 
 //열려있는 editor의 텍스트를 반환
-export function getTextFromEditor(): String | undefined {
+export function getTextFromEditor(): string | undefined {
   const editor = window.activeTextEditor;
   if (editor) {
     const document = editor.document;
@@ -53,7 +53,7 @@ export async function getUserInfo(): Promise<
   const fileUri = getMetaFileUri();
   if (!fileUri) return;
 
-  const text = await readFile(fileUri);
+  let text = await readFile(fileUri);
 
   //텍스트가 비어있다면 -> submit할 때 유저의 정보를 생성
   if (text == '') {
@@ -82,20 +82,23 @@ export async function getUserInfo(): Promise<
     // }
     // 로 이루어져있음
     const userInfo = {
-      userID,
+      userID: encodeUserId(userID),
       currentSubmit: '',
       // submitHistory: [],
     };
 
-    //유저의 정보를 기록
+    //유저의 정보를 기록 후 다시 읽기
     await writeFile(fileUri, JSON.stringify(userInfo));
 
-    return userInfo;
+    text = await readFile(fileUri);
   }
 
-  // 내용이 있다면 JSON으로 변환
+  // 내용이 있다면 JSON으로 변환 후 id decode
   try {
-    const userInfo = JSON.parse(text);
+    const userInfo: {
+      userID: string,
+      currentSubmit: string
+    } = JSON.parse(text);
     return userInfo;
   } catch (err) {
     window.showErrorMessage(`${fileUri.path} 형식 확인 필요.`);
@@ -105,7 +108,7 @@ export async function getUserInfo(): Promise<
 export async function getProblemCode(
   currentSubmit: string,
   // submitHistory: string[]
-): Promise<String | undefined> {
+): Promise<string | undefined> {
   //--- showInputBox는 엔터를 쳐야 다음 단계로 넘어가짐 -> 엔터를 쳐야 문제코드 히스토리가 보이는 문제..
   // const problemCode = await window.showInputBox({
   //   placeHolder: 'Write problem code',

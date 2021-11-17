@@ -1,5 +1,17 @@
 import { workspace, Uri } from 'vscode';
 
+export function encodeUserId(id: string): string {
+  const encode = (str: string): string => Buffer.from(str, 'binary').toString('base64');
+  const encodedId = encode(id);
+  return encodedId;
+}
+
+export function decodeUserID(id: string): string {
+  const decode = (str: string): string => Buffer.from(str, 'base64').toString('binary');
+  const decodedId = decode(id);
+  return decodedId;
+}
+
 export function windowPath(target: string): string {
   const from = '\\',
     to = '\\\\';
