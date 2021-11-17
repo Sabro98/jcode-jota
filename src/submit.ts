@@ -1,9 +1,9 @@
 import fetch from 'node-fetch';
 import * as fs from 'fs';
 import * as path from 'path';
-import { workspace, window, WorkspaceFolder } from 'vscode';
-import { windowPath, writeFile } from './function';
-import { decodeUserID } from './function';
+
+import { workspace, window, WorkspaceFolder, env, Uri } from 'vscode';
+import { windowPath, writeFile, showDetails, decodeUserID } from './function';
 
 // submit code to jota [params => (userId, problemCode, sourceCode)]
 export async function submitCode(
@@ -59,7 +59,10 @@ export async function submitCode(
     if (status !== 200) {
       //URL을 포함해서 보여주면 될듯
       // console.log(JotaURL);
-      window.showErrorMessage(`!!${result[0]}!! error in code!!! `);
+      const buttonText = 'Show Details';
+      const click = await window.showErrorMessage(`!!${result[0]}!! error in code!!! `, buttonText);
+      if(!click) return;
+      showDetails(JotaURL); // 버튼 누르면 jota 채점 페이지로 이동
       return;
     }
 
