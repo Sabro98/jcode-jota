@@ -6,10 +6,8 @@ import { showDetails } from './function';
 import { submitCode } from './submit';
 import { getTextFromEditor, getProblemCode, getUserInfo } from './userHandle';
 
-// TODO: 아이콘 잘 보이도록 수정, 에러 체크
-
 export function activate(context: ExtensionContext) {
-  console.log("Start");
+  console.log('Start');
   // 커맨드 코드
   const command = 'jcode-jota.submitCode';
   const disposable = commands.registerCommand(command, async () => {
@@ -35,7 +33,10 @@ export function activate(context: ExtensionContext) {
     //최종 결과를 보여줄 때 여기에서 JotaURL으로 이동하는 버튼을 같이 보여주면 될듯
     // console.log(JotaURL);
     const buttonText = 'Show Details';
-    const click = await window.showInformationMessage(displayResult, buttonText);
+    const click = await window.showInformationMessage(
+      displayResult,
+      buttonText
+    );
     if (!click) return;
     showDetails(JotaURL); // 버튼 누르면 jota 채점 페이지로 이동
   });
@@ -71,7 +72,7 @@ class SubmissionViewProvider implements vscode.WebviewViewProvider {
 
   private _view?: vscode.WebviewView;
 
-  constructor(private readonly _extensionUri: vscode.Uri) { }
+  constructor(private readonly _extensionUri: vscode.Uri) {}
 
   public resolveWebviewView(
     webviewView: vscode.WebviewView,
@@ -180,4 +181,4 @@ function getNonce() {
 }
 
 // this method is called when your extension is deactivated
-export function deactivate() { }
+export function deactivate() {}

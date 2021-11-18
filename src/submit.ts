@@ -3,7 +3,7 @@ import * as path from 'path';
 
 import { workspace, window, WorkspaceFolder, env, Uri } from 'vscode';
 import { windowPath, writeFile, showDetails, decodeUserID } from './function';
-import { REST_submit } from "./jotaRest";
+import { REST_submit } from './jotaRest';
 
 // submit code to jota [params => (userId, problemCode, sourceCode)]
 export async function submitCode(
@@ -11,10 +11,10 @@ export async function submitCode(
   problemCode: string,
   sourceCode: string
 ): Promise<
-  {
-    finalResult: string[],
-    JotaURL: string
-  }
+  | {
+      finalResult: string[];
+      JotaURL: string;
+    }
   | undefined
 > {
   const userId = decodeUserID(encodedUserId);
@@ -22,11 +22,13 @@ export async function submitCode(
   // status -> 정상적인 결과: 200, 비정상 결과: 405
   // result -> 정상적인 결과: 정답들의 array, 비정상 결과: 에러 코드가 포함된 size 1의 array
   // JotaURL -> 해당 제출과 연결된 Jota의 URL
-  const submitResult: {
-    status: number,
-    result: any[],
-    JotaURL: string
-  } | undefined = await REST_submit(userId, problemCode, sourceCode);
+  const submitResult:
+    | {
+        status: number;
+        result: any[];
+        JotaURL: string;
+      }
+    | undefined = await REST_submit(userId, problemCode, sourceCode);
 
   if (!submitResult) return;
 
@@ -36,7 +38,10 @@ export async function submitCode(
   if (status !== 200) {
     //URL을 포함해서 보여주면 될듯
     const buttonText = 'Show Details';
-    const click = await window.showErrorMessage(`!!${result[0]}!! error in code!!! `, buttonText);
+    const click = await window.showErrorMessage(
+      `!!${result[0]}!! error in code!!! `,
+      buttonText
+    );
     if (!click) return;
     showDetails(JotaURL); // 버튼 누르면 jota 채점 페이지로 이동
     return;
@@ -109,7 +114,9 @@ async function saveResultAsFile(
 
   !fs.existsSync(basePath) && fs.mkdirSync(basePath, { recursive: true });
 
-  const hour = currDate.getHours().toString().padStart(2, '0'), minute = currDate.getMinutes().toString().padStart(2, '0'), sec = currDate.getSeconds().toString().padStart(2, '0');
+  const hour = currDate.getHours().toString().padStart(2, '0'),
+    minute = currDate.getMinutes().toString().padStart(2, '0'),
+    sec = currDate.getSeconds().toString().padStart(2, '0');
   const fileName = `${problemCode}@${hour}_${minute}_${sec}.txt`;
 
   let saveFilePath = path.join(basePath, fileName);
