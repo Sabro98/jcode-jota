@@ -50,7 +50,7 @@
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src --ext ts",
-    "test": "mocha -r ts-node/register ./**/*.test.ts"
+    "test": "node ./out/test/runTest.js"
   },
   "devDependencies": {
     "@types/chai": "^4.2.22",

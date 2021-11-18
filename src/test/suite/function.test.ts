@@ -1,11 +1,15 @@
-import { expect } from 'chai';
+import * as assert from 'assert';
+import { after } from 'mocha';
 import { encodeUserId, decodeUserID } from '../../function';
+import * as vscode from 'vscode';
 
-describe('run test', () => {
-  it('base64 encode test', () => {
-    expect(encodeUserId('inhyuk')).to.equal('aW5oeXVr');
+suite('Function Test Suite', () => {
+  after(() => {
+    vscode.window.showInformationMessage('All tests done!');
   });
-  it('base', () => {
-    expect(encodeUserId('aW5oeXVr')).to.equal('inhyuk');
+
+  test('base64 test', () => {
+    assert.strictEqual('aW5oeXVr', encodeUserId('inhyuk'));
+    assert.strictEqual('inhyuk', decodeUserID('aW5oeXVr'));
   });
 });
