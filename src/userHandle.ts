@@ -1,7 +1,8 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { window, workspace, Uri, WorkspaceFolder, commands } from 'vscode';
-import { getProblemsListFromContest } from './function';
+import { getProblemsMapFromContest } from './function';
+import { JotaProblem } from './types';
 import {
   writeFile,
   readFile,
@@ -129,38 +130,31 @@ export async function getProblemCode(
   //   value: currentSubmit,
   // });
 
-  // ---problemsInfo---
-  // from JOTA (JOTA에 현재 존재하는 문제의 정보)
-  // <key:string, value:string>
-  // key: problemName, value: problemCode
-  const problemsInfoMap = new Map<string, string>();
   // userID : encode state
   const contestProblems = await getUserContestProblems(userID); // return "user participate contest" problem list
   if (!contestProblems) return;
-  console.log(contestProblems);
   // let validProblemList = await REST_getProblemListFromJOTA(problemsInfoMap); // return all jota problem list
-  const validProblemList = await getProblemsListFromContest(
-    contestProblems,
-    problemsInfoMap
-  );
-  if (!validProblemList) return;
-  const HighPriorityIdx = validProblemList.indexOf(currentSubmit); // 최근 제출 문제 인덱스 얻기
+  const validProblemMap = getProblemsMapFromContest(contestProblems);
+
+  //--- problemsName : 'problemName(problemCode)' format
+  const problemsName = Array.from(validProblemMap.keys()); // iterator to Array
+  const HighPriorityIdx = problemsName.indexOf(currentSubmit); // 최근 제출 문제 인덱스 얻기
   if (HighPriorityIdx != -1) {
-    validProblemList.splice(HighPriorityIdx, 1); // 삭제, 리스트 중복 해결
-    validProblemList.unshift(currentSubmit); // 최근 제출 문제 맨 앞에 삽입
+    // 인덱스를 성공적으로 얻으면
+    problemsName.splice(HighPriorityIdx, 1); // 삭제 (배열 중복 해결)
+    problemsName.unshift(currentSubmit); // 최근 제출 문제 맨 앞에 삽입
   }
-  if (!validProblemList) return;
-  // showQuickPick : 전달해준 리스트에 있는 값만 problemCode로 리턴 가능 (새로운 값 입력 불가)
-  const problemName = await window.showQuickPick(
-    validProblemList, // 문제 이름 리스트 전달
+  // showQuickPick : 전달해준 리스트에 있는 값만 pickProblem으로 리턴 가능 (새로운 값 입력 불가)
+  const pickProblem = await window.showQuickPick(
+    problemsName, // 문제 이름 리스트 전달
     {
       placeHolder: 'Write problem code',
     }
   );
 
-  if (!problemName) return;
-  updateUserCurrentSubmit(problemName);
-  const problemCode = problemsInfoMap.get(problemName); // key를 입력해서 value를 얻어옴
+  if (!pickProblem) return;
+  updateUserCurrentSubmit(pickProblem);
+  const problemCode = validProblemMap.get(pickProblem); // key를 입력해서 value를 얻어옴
 
   return problemCode; // 문제 코드 리턴
 }

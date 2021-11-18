@@ -187,7 +187,6 @@ export async function REST_getProblemListFromJOTA(
       };
     } = await response.json();
     const JOTAproblemsInfo = post.data.objects; // JOTA에 존재하는 문제 정보(problemCode, problemName등) 가져옴
-    // console.log(typeof(JOTAproblemsInfo));
     const problemNames = JOTAproblemsInfo.map((problem) =>
       formattingProblem(problem.name, problem.code)
     ); // 문제 이름 저장, QuickPick 리스트가 배열을 받으므로 따로 이름 배열로 저장
