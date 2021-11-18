@@ -9,9 +9,8 @@ on:
       - master
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-
+  test:
+    name: test
     strategy:
       matrix:
         os: [macos-latest, ubuntu-latest, windows-latest]
