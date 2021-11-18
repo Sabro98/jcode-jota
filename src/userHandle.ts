@@ -139,7 +139,7 @@ export async function getProblemCode(
   if (!contestProblems) return;
   console.log(contestProblems);
   // let validProblemList = await REST_getProblemListFromJOTA(problemsInfoMap); // return all jota problem list
-  let validProblemList = await getProblemsListFromContest(
+  const validProblemList = await getProblemsListFromContest(
     contestProblems,
     problemsInfoMap
   );
