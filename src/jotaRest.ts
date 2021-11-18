@@ -1,5 +1,6 @@
 import fetch from 'node-fetch';
 import { window } from 'vscode';
+import { JotaProblem } from './types';
 
 // 모든 rest 요청을 하는 함수 이름은 반드시 REST_xxx
 
@@ -71,32 +72,14 @@ export async function REST_submit(
 }
 
 // Get problems in specific contest
-export async function REST_contestProblems(contests: string[]): Promise<
-  {
-    code: string; // problems code
-    is_pretesed: boolean;
-    label: string;
-    max_submissions: number;
-    name: string; // problems name
-    partial: boolean;
-    points: number;
-    contest: string;
-  }[]
-> {
+export async function REST_contestProblems(
+  contests: string[]
+): Promise<JotaProblem[]> {
   // input: contest id
   // output: List of problems at contest
   // TODO: type을 하나로 합칠 수 없을까?
 
-  const problems: {
-    code: string; // problems code
-    is_pretesed: boolean;
-    label: string;
-    max_submissions: number;
-    name: string; // problems name
-    partial: boolean;
-    points: number;
-    contest: string;
-  }[] = [];
+  const problems: JotaProblem[] = [];
 
   for (let i = 0; i < contests.length; i++) {
     const SUB_PATH: string = `/api/v2/contest/problem/${contests[i]}`; //contest problem 정보
@@ -105,21 +88,10 @@ export async function REST_contestProblems(contests: string[]): Promise<
     try {
       const response = await fetch(URL);
       const post = await response.json();
-      post.data.object.problems.forEach(
-        (problem: {
-          code: string; // problems code
-          is_pretesed: boolean;
-          label: string;
-          max_submissions: number;
-          name: string; // problems name
-          partial: boolean;
-          points: number;
-          contest: string;
-        }) => {
-          problem.contest = contests[i];
-          problems.push(problem);
-        }
-      );
+      post.data.object.problems.forEach((problem: JotaProblem) => {
+        problem.contest = contests[i];
+        problems.push(problem);
+      });
     } catch (error) {
       showErrorMsg();
     }
@@ -215,6 +187,7 @@ export async function REST_getProblemListFromJOTA(
       };
     } = await response.json();
     const JOTAproblemsInfo = post.data.objects; // JOTA에 존재하는 문제 정보(problemCode, problemName등) 가져옴
+    // console.log(typeof(JOTAproblemsInfo));
     const problemNames = JOTAproblemsInfo.map((problem) =>
       formattingProblem(problem.name, problem.code)
     ); // 문제 이름 저장, QuickPick 리스트가 배열을 받으므로 따로 이름 배열로 저장

@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { window, workspace, Uri, WorkspaceFolder, commands } from 'vscode';
+import { getProblemsListFromContest } from './function';
 import {
   writeFile,
   readFile,
@@ -118,6 +119,7 @@ async function getUserContestProblems(encodedUserID: string): Promise<
 
 // Return source code that user want to submit
 export async function getProblemCode(
+  userID: string,
   currentSubmit: string
   // submitHistory: string[]
 ): Promise<string | undefined> {
@@ -132,8 +134,15 @@ export async function getProblemCode(
   // <key:string, value:string>
   // key: problemName, value: problemCode
   const problemsInfoMap = new Map<string, string>();
-
-  const validProblemList = await REST_getProblemListFromJOTA(problemsInfoMap);
+  // userID : encode state
+  const contestProblems = await getUserContestProblems(userID); // return "user participate contest" problem list
+  if (!contestProblems) return;
+  console.log(contestProblems);
+  // let validProblemList = await REST_getProblemListFromJOTA(problemsInfoMap); // return all jota problem list
+  let validProblemList = await getProblemsListFromContest(
+    contestProblems,
+    problemsInfoMap
+  );
   if (!validProblemList) return;
   const HighPriorityIdx = validProblemList.indexOf(currentSubmit); // 최근 제출 문제 인덱스 얻기
   if (HighPriorityIdx != -1) {

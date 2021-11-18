@@ -14,7 +14,7 @@ export function activate(context: ExtensionContext) {
     const userInfo = await getUserInfo();
     if (!userInfo) return;
     const { userID, currentSubmit } = userInfo;
-    const problemCode = await getProblemCode(currentSubmit);
+    const problemCode = await getProblemCode(userID, currentSubmit);
     if (!problemCode) return;
     const sourceCode = getTextFromEditor();
     if (!sourceCode) return;
