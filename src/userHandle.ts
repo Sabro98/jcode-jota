@@ -1,8 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { window, workspace, Uri, WorkspaceFolder, commands } from 'vscode';
+import { window, workspace, Uri, WorkspaceFolder } from 'vscode';
 import { getProblemsMapFromContest } from './function';
-import { JotaProblem } from './types';
 import {
   writeFile,
   readFile,
@@ -52,6 +51,7 @@ export async function getUserInfo(): Promise<
     if (!userID) return;
     const userPwd = await window.showInputBox({
       placeHolder: 'write your password',
+      password: true,
     });
     if (!userPwd) return;
 
