@@ -32,7 +32,8 @@ export async function submitCode(
 
   if (!submitResult) return;
 
-  const { status, result, JotaURL } = submitResult;
+  const { status, result } = submitResult;
+  let { JotaURL } = submitResult;
 
   //제출한 code에 에러가 있는 상황
   if (status !== 200) {
@@ -43,6 +44,8 @@ export async function submitCode(
       buttonText
     );
     if (!click) return;
+    JotaURL = JotaURL.replace('203.254.143.215', 'jota.jbnu.ac.kr');
+
     showDetails(JotaURL); // 버튼 누르면 jota 채점 페이지로 이동
     return;
   }
