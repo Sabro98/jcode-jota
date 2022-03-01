@@ -4,7 +4,7 @@ import { JotaProblem } from './types';
 
 // 모든 rest 요청을 하는 함수 이름은 반드시 REST_xxx
 
-const JOTA_BASE_URL = 'http://203.254.143.156:8001';
+const JOTA_BASE_URL = 'http://jota.jbnu.ac.kr';
 
 function makeFullPath(subPath: string): string {
   // subPath must start with '/'
