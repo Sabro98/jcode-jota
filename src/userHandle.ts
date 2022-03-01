@@ -49,19 +49,19 @@ export async function getUserInfo(): Promise<
       placeHolder: 'write your id',
     });
     if (!userID) return;
-    const userPwd = await window.showInputBox({
-      placeHolder: 'write your password',
-      password: true,
-    });
-    if (!userPwd) return;
+    // const userPwd = await window.showInputBox({
+    //   placeHolder: 'write your password',
+    //   password: true,
+    // });
+    // if (!userPwd) return;
 
     //입력 받은 정보를 사용해 로그인 시도
-    if (!(await REST_loginUser(userID, userPwd))) {
-      window.showErrorMessage('로그인 실패!! 정보를 다시 확인해주세요.');
-      return;
-    } else {
-      window.showInformationMessage('로그인 성공!!!');
-    }
+    // if (!(await REST_loginUser(userID, userPwd))) {
+    //   window.showErrorMessage('로그인 실패!! 정보를 다시 확인해주세요.');
+    //   return;
+    // } else {
+    window.showInformationMessage('로그인 성공!!!');
+    // }
 
     // --- userInfo ---
     // {
@@ -118,46 +118,58 @@ async function getUserContestProblems(encodedUserID: string): Promise<
   return problems;
 }
 
-// Return source code that user want to submit
-export async function getProblemCode(
-  userID: string,
-  currentSubmit: string
-  // submitHistory: string[]
-): Promise<string | undefined> {
-  //--- showInputBox는 엔터를 쳐야 다음 단계로 넘어가짐 -> 엔터를 쳐야 문제코드 히스토리가 보이는 문제..
-  // const problemCode = await window.showInputBox({
-  //   placeHolder: 'Write problem code',
-  //   value: currentSubmit,
-  // });
+export async function getProblemCode(): Promise<string | undefined> {
+  // currentSubmit: string
+  const problemCode = await window.showInputBox({
+    placeHolder: 'Write problem code',
+    // value: currentSubmit,
+  });
 
-  // userID : encode state
-  const contestProblems = await getUserContestProblems(userID); // return "user participate contest" problem list
-  if (!contestProblems) return;
-  // let validProblemList = await REST_getProblemListFromJOTA(problemsInfoMap); // return all jota problem list
-  const validProblemMap = getProblemsMapFromContest(contestProblems);
-
-  //--- problemsName : 'problemName(problemCode)' format
-  const problemsName = Array.from(validProblemMap.keys()); // iterator to Array
-  const HighPriorityIdx = problemsName.indexOf(currentSubmit); // 최근 제출 문제 인덱스 얻기
-  if (HighPriorityIdx != -1) {
-    // 인덱스를 성공적으로 얻으면
-    problemsName.splice(HighPriorityIdx, 1); // 삭제 (배열 중복 해결)
-    problemsName.unshift(currentSubmit); // 최근 제출 문제 맨 앞에 삽입
-  }
-  // showQuickPick : 전달해준 리스트에 있는 값만 pickProblem으로 리턴 가능 (새로운 값 입력 불가)
-  const pickProblem = await window.showQuickPick(
-    problemsName, // 문제 이름 리스트 전달
-    {
-      placeHolder: 'Write problem code',
-    }
-  );
-
-  if (!pickProblem) return;
-  updateUserCurrentSubmit(pickProblem);
-  const problemCode = validProblemMap.get(pickProblem); // key를 입력해서 value를 얻어옴
-
-  return problemCode; // 문제 코드 리턴
+  //제출 후 문제 번호 업데이트
+  // if (problemCode) updateUesrCurrentSubmit(problemCode);
+  return problemCode;
 }
+
+// // Return source code that user want to submit
+// export async function getProblemCode(
+//   userID: string,
+//   currentSubmit: string
+//   // submitHistory: string[]
+// ): Promise<string | undefined> {
+//   //--- showInputBox는 엔터를 쳐야 다음 단계로 넘어가짐 -> 엔터를 쳐야 문제코드 히스토리가 보이는 문제..
+//   // const problemCode = await window.showInputBox({
+//   //   placeHolder: 'Write problem code',
+//   //   value: currentSubmit,
+//   // });
+
+//   // userID : encode state
+//   const contestProblems = await getUserContestProblems(userID); // return "user participate contest" problem list
+//   if (!contestProblems) return;
+//   // let validProblemList = await REST_getProblemListFromJOTA(problemsInfoMap); // return all jota problem list
+//   const validProblemMap = getProblemsMapFromContest(contestProblems);
+
+//   //--- problemsName : 'problemName(problemCode)' format
+//   const problemsName = Array.from(validProblemMap.keys()); // iterator to Array
+//   const HighPriorityIdx = problemsName.indexOf(currentSubmit); // 최근 제출 문제 인덱스 얻기
+//   if (HighPriorityIdx != -1) {
+//     // 인덱스를 성공적으로 얻으면
+//     problemsName.splice(HighPriorityIdx, 1); // 삭제 (배열 중복 해결)
+//     problemsName.unshift(currentSubmit); // 최근 제출 문제 맨 앞에 삽입
+//   }
+//   // showQuickPick : 전달해준 리스트에 있는 값만 pickProblem으로 리턴 가능 (새로운 값 입력 불가)
+//   const pickProblem = await window.showQuickPick(
+//     problemsName, // 문제 이름 리스트 전달
+//     {
+//       placeHolder: 'Write problem code',
+//     }
+//   );
+
+//   if (!pickProblem) return;
+//   updateUserCurrentSubmit(pickProblem);
+//   const problemCode = validProblemMap.get(pickProblem); // key를 입력해서 value를 얻어옴
+
+//   return problemCode; // 문제 코드 리턴
+// }
 
 //최근 제출 정보를 업데이트
 async function updateUserCurrentSubmit(newSubmit: string) {

@@ -14,7 +14,8 @@ export function activate(context: ExtensionContext) {
     const userInfo = await getUserInfo();
     if (!userInfo) return;
     const { userID, currentSubmit } = userInfo;
-    const problemCode = await getProblemCode(userID, currentSubmit);
+    // const problemCode = await getProblemCode(userID, currentSubmit);
+    const problemCode = await getProblemCode();
     if (!problemCode) return;
     const sourceCode = getTextFromEditor();
     if (!sourceCode) return;
@@ -23,6 +24,7 @@ export function activate(context: ExtensionContext) {
     if (!submitResultObj) return;
     const submitResult = submitResultObj.finalResult;
     const JotaURL = submitResultObj.JotaURL;
+    console.log('jota' + submitResult);
 
     const emoji = submitResult[1].split(' ');
     let displayResult = `${problemCode} → `;

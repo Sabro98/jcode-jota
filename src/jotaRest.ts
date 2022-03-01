@@ -35,6 +35,7 @@ export async function REST_submit(
 
   const SUB_PATH = '/api/v2/submit/jcode';
   const URL = makeFullPath(SUB_PATH);
+  console.log(URL);
 
   const data = {
     judge_id: 'jota-judge',
@@ -154,7 +155,7 @@ export async function REST_loginUser(
 
   // if success to login, status = 200 else 500
   const response = await fetch(URL, options);
-
+  console.log(response);
   return response.status == 200;
 }
 
