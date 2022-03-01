@@ -23,7 +23,7 @@ export function activate(context: ExtensionContext) {
     const submitResultObj = await submitCode(userID, problemCode, sourceCode);
     if (!submitResultObj) return;
     const submitResult = submitResultObj.finalResult;
-    const JotaURL = submitResultObj.JotaURL;
+    let JotaURL = submitResultObj.JotaURL;
     console.log('jota' + submitResult);
 
     const emoji = submitResult[1].split(' ');
@@ -39,7 +39,9 @@ export function activate(context: ExtensionContext) {
       displayResult,
       buttonText
     );
+    console.log(JotaURL);
     if (!click) return;
+    JotaURL = JotaURL.replace('203.254.143.215', 'jota.jbnu.ac.kr');
     showDetails(JotaURL); // 버튼 누르면 jota 채점 페이지로 이동
   });
 
